@@ -19,7 +19,7 @@ Driver nvidia: 450.66
 ### Preparação dos dados
 # 
 - Use o Roboflow para anotar e coloque tudo como treinamento (não divida em validação e teste)
-- Gere o .zip e coloque na pasta ./dataset/all
+- Gere o .zip e coloque na pasta ./dataset/all (TEM UM ARQUIVO DE EXEMPLO LÁ)
 - Descompacte dentro da pasta all (vai criar uma subpasta chamada train)
 - Rode o utilitário que vai preparar os dados e separar nas dobras
 
