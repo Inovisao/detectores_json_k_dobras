@@ -23,12 +23,10 @@ Driver nvidia: 450.66
 - Descompacte dentro da pasta all (vai criar uma subpasta chamada train)
 - Rode o utilitário que vai preparar os dados e separar nas dobras
 
-$ cd dataset/all/
+$ cd dataset/all/  
 $ unzip exemplo_anotacoes_roboflow.zip
-$ 
-
-$ cd utils
-$ ./preparaDadosPelaPrimeiraVez.sh
+$ cd ../../utils
+$ ./preparaDadosPelaPrimeiraVez.sh # Não esqueça antes de criar e iniciar seu ambiente CONDA (ler install.sh)
 
 - Se necessário, troque o número 4 pela quantidade de dobras que você quiser
   e o 0.3 pelo percentual que você quiser usar para o conjunto de validação

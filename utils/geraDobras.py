@@ -53,6 +53,10 @@ def main(args):
         if args.having_annotations:
             images = funcy.lremove(lambda i: i['id'] not in images_with_annotations, images)
 
+        # Testa se a pasta para os arquivos JSON ainda não existe e cria
+        if not os.path.exists(args.json):
+            os.makedirs(args.json)
+            
         # Remove os arquivos antigos da pasta filesJSON
         files = glob.glob(args.json+'*')
         for f in files:
