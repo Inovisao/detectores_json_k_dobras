@@ -12,36 +12,34 @@ library("ExpDes")
 library("dplyr")
 library("ExpDes.pt")
 library(tidyr)
-
-EPOCAS=20
-
+library("Metrics")
 
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
 # BOXPLOT DO DESEMPENHO ENTRE TÉCNICAS
 #
 dados <- read.table('./dataset/results.csv',sep=',',header=TRUE)
-metricas <- list("AP50")
+metricas <- list("mAP50","MAE","RMSE","r")
 graficos <- list()
 i <- 1
 
 for (metrica in metricas) {
-
    print(metrica)
    TITULO = sprintf("Boxplot for %s",metrica)
 
-      g <- ggplot(dados, aes(x=ml, y=AP50,fill=ml)) + 
+      g <- ggplot(dados, aes_string(x=dados$ml, y=metrica,fill=dados$ml)) + 
            geom_boxplot(alpha=0.3)+
-           #scale_fill_brewer(palette="Purples")+
+#           scale_fill_brewer(palette="Purples")+
            labs(title=TITULO,x="ML Technique", y = metrica)+
            theme(legend.position="none",plot.title = element_text(hjust = 0.5))
    
    graficos[[i]] <- g
    i = i + 1
+   print(g)
 }
 
-g <- grid.arrange(grobs=graficos, ncol = 1)
-ggsave(paste("./dataset/boxplot.png", sep=""),g, width = 10, height = 8)
+g <- grid.arrange(grobs=graficos, ncol = 2)
+ggsave(paste("./dataset/boxplot.png", sep=""),g, width = 10, height = 10)
 print(g)
 
 
@@ -56,7 +54,16 @@ contaDobras <- dados[dados$ml == nets[1], ]
 
 DOBRAS=nrow(contaDobras)
 
+# GAMBIARRA PARA PEGAR O TOTAL DE ÉPOCAS DE DENTRO DE experimento.py 
+log <- readLines('experimento.py')
+log <-log[grepl('EPOCAS=',log)]
+logTable <- read.table(text = log,sep='=')
+EPOCAS=logTable[1,2]
 
+# GAMBIARRA PARA ENCONTRAR E PEGAR DADOS DO ARQUIVO DE LOG
+# SE TIVER MAIS DE UM ARQUIVO .log DÁ ERROR POR ISSO TEM
+# QUE LIMPAR OS RESULTADOS ANTERIORES ANTES DE RODAR O
+# EXPERIMENTO
 logFile <- list.files(".", "log$", recursive=TRUE, full.names=TRUE, include.dirs=TRUE)
 log <- readLines(logFile)
 epocas <-log[grepl('- mmdet - INFO - Epoch\\(',log)]
@@ -89,6 +96,52 @@ g <- ggplot(filtrado, aes(x=epochs, y=loss, colour=nets, group=nets)) +
 ggsave(paste("./dataset/history.png", sep=""),g)
 print(g)
 
+
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# XY CONTAGEM MANUAL X AUTOMÁTICA
+#
+dados <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
+
+graficos <- list()
+i <- 1
+
+
+for (net in nets) {
+
+   filtrado <- dados[dados$ml == net, ]
+
+   RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
+   MAE = mae(filtrado$groundtruth,filtrado$predicted)
+   R = cor(filtrado$groundtruth,filtrado$predicted)
+   TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f R = %.3f",net,RMSE,MAE,R)
+
+   g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
+        geom_point()+
+        geom_smooth(method='lm')+
+        labs(title=TITULO,x="Measured", y = "Predicted")
+
+   
+   graficos[[i]] <- g
+   i = i + 1
+}
+
+g <- grid.arrange(grobs=graficos, ncol = 1)
+ggsave(paste("./dataset/counting.png", sep=""),g, width = 10, height = 8)
+print(g)
+
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# HISTOGRAMA DA DISTRIBUIÇÃO DOS DADOS DO CONJUNTO DE TESTE
+# (CONTAGENS MANUAIS)
+
+ggplot(filtrado, aes(x=groundtruth))+
+   geom_histogram(color="darkblue", fill="lightblue")+
+   xlab("Objects Countings")+
+   ylab("Density")+
+   ggtitle("Histogram & Density Curve for Ground Truth Countings")
 
 
 

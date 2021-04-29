@@ -10,10 +10,11 @@
 #
 
 DOBRAS=4
-EPOCAS=20
-TAXA_APRENDIZAGEM=0.0001
+EPOCAS=100
+TAXA_APRENDIZAGEM=0.1
 
-
+# Coloque True se quiser apenas testar redes previamente treinada
+APENAS_TESTA=False
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -57,6 +58,11 @@ from mmcv.visualization import color_val
 from mmdet.core import visualization as vis
 import mmcv, torch
 import cv2
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+import math
+
+
 
 
 
@@ -89,10 +95,6 @@ plt.rcParams["axes.grid"] = False
 #
 # Dentro do site procure por um link chamado 'model' (podem ter vários, para as várias versões da
 # rede que você pode escolher)
-#
-#Você encontrará outras redes aqui:
-#https://github.com/open-mmlab/mmdetection/tree/master/configs
-
 MODELS_CONFIG = {
     'vfnet_r50': {
         'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
@@ -102,14 +104,6 @@ MODELS_CONFIG = {
         'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
     },
-#    'sabl_r50':{
-#        'config_file': 'configs/sabl/sabl_cascade_rcnn_r50_fpn_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/sabl_cascade_rcnn_r50_fpn_1x_coco-e1748e5e.pth'
-#    },
-#    'detr_r50':{
-#        'config_file': 'configs/detr/detr_r50_8x2_150e_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/detr_r50_8x2_150e_coco_20201130_194835-2c4b8974.pth'
-#    },
     'retinanet_r50':{
         'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
@@ -225,7 +219,20 @@ def setCFG(selected_model,
   # at the final config used for training
   #print(f'Config:\n{cfg.pretty_text}')
   return cfg
+
+#----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+#
+# FUNÇÃO AUXILIAR PARA ESCREVER EM ARQUIVO
+#
   
+# Vai salar os resultados no arquivo dataset/results.csv
+def printToFile(linha='',arquivo='dataset/results.csv',modo='a'):
+  original_stdout = sys.stdout # Save a reference to the original standard output
+  with open(arquivo, modo) as f:
+    sys.stdout = f # Change the standard output to the file we created.
+    print(linha)
+    sys.stdout = original_stdout # Reset the standard output to its original value
 
 
 
@@ -299,7 +306,7 @@ def trainModel(cfg):
 #
 # FUNÇÃO QUE APLICA O MODELO APRENDIDO NOS DADOS DE TESTE
 #
-def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_imgs=False):
+def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_imgs=False,num_model=1,fold='fold_1'):
   
   # build the model from a config file and a checkpoint file
   cfg.data.test.test_mode = True
@@ -321,7 +328,10 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
   coco_dataset = CocoDataset(ann_file=ann_file, classes=cfg.classes,data_root=cfg.data_root,img_prefix=img_prefix,pipeline=cfg.train_pipeline,filter_empty_gt=False)
 
+  MAX_BOX=100
   results=[]
+  medidos=[]
+  preditos=[]
   for i,dt in enumerate(coco_dataset.data_infos):
 
     print('Arquivo de imagens:',dt['file_name'])
@@ -337,14 +347,20 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
     #vis.imshow_gt_det_bboxes(imagex,dict(gt_bboxes=bboxes, gt_labels=np.repeat(1, len(bboxes))), resultx,det_bbox_color=(0,100,0), show=True,score_thr=0.5)
 
-    for j in range(min(20, bboxes.shape[0])): # Até 20 bboxes
+    objetos_medidos=bboxes.shape[0] # Total de objetos marcados manualmente (groundtruth)
+    for j in range(min(MAX_BOX, bboxes.shape[0])): # Até 100 bboxes
       left_top = (bboxes[j, 0], bboxes[j, 1])
       right_bottom = (bboxes[j, 2], bboxes[j, 3])
       imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=2)
     
     #RESULTADOS BBOXS VERDES Prediction
     bboxes = resultx[0]
-    for j in range(min(20, bboxes.shape[0])):
+    objetos_preditos=bboxes.shape[0] # Total de objetos preditos automaticamente
+
+    medidos.append(objetos_medidos)
+    preditos.append(objetos_preditos)
+
+    for j in range(min(MAX_BOX, bboxes.shape[0])):
       if bboxes[j,4] > 0.5:
         left_top = (bboxes[j, 0], bboxes[j, 1])
         right_bottom = (bboxes[j, 2], bboxes[j, 3])
@@ -364,18 +380,25 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
       print("Salvou?: ",cv2.imwrite(img_path,imagex))
 
     results.append(resultx)
+    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos),'dataset/counting.csv','a')
+    
+    
   eval_results = coco_dataset.evaluate(results, classwise=True)
   print('Resultados do comando coco_dataset.evaluate:')
   print(eval_results)
   #print(selected_model,'\t',eval_results['bbox_mAP_50'])
   #string_results = selected_model+'\t'+str(eval_results['bbox_mAP_50'])
 
-  string_results = '0'
+  string_results = '0,0,0,0'
 
   try:
-    string_results = str(eval_results['bbox_mAP_50'])
-  except KeyError:
-    print('ERRO ... NÃO ACHOU NENHUM OBJETO')
+    mAP50=eval_results['bbox_mAP_50']
+    MAE=mean_absolute_error(medidos,preditos)
+    RMSE=math.sqrt(mean_squared_error(medidos,preditos))
+    r=np.corrcoef(medidos,preditos)[0,1]
+    string_results = str(mAP50)+','+str(MAE)+','+str(RMSE)+','+str(r)
+  except:
+    print('ERRO ... DEU PROBLEMA NA HORA DE CALCULAR ALGUMA MÉTRICA')
 
   return string_results
   
@@ -393,8 +416,9 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
 REDES=[k for k in MODELS_CONFIG.keys()]
 
-for selected_model in REDES:
-  for f in np.arange(1,DOBRAS+1):
+if(not APENAS_TESTA):
+  for selected_model in REDES:
+    for f in np.arange(1,DOBRAS+1):
       print('------------------------------------------------------')
       print('-- RODANDO COM A REDE ',selected_model,' NA DOBRA ',f)
       print('------------------------------------------------------')
@@ -412,20 +436,14 @@ for selected_model in REDES:
 # RODA NO CONJUNTO DE TESTE
 #
 
-# Vai salar os resultados no arquivo dataset/results.csv
-def printToFile(linha='',modo='a'):
-  original_stdout = sys.stdout # Save a reference to the original standard output
-  with open('dataset/results.csv', modo) as f:
-    sys.stdout = f # Change the standard output to the file we created.
-    print(linha)
-    sys.stdout = original_stdout # Reset the standard output to its original value
-
 
 print('======================================================')
 print(' INICIANDO TESTE - INICIANDO TESTE - INICIANDO TESTE')
 print('======================================================')
 
-printToFile('ml,fold,AP50','w')
+printToFile('ml,fold,groundtruth,predicted','dataset/counting.csv','w')
+
+printToFile('ml,fold,mAP50,MAE,RMSE,r','dataset/results.csv','w')
 i=1
 for selected_model in REDES:
     for f in np.arange(1,DOBRAS+1):
@@ -438,8 +456,8 @@ for selected_model in REDES:
 
       pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
       print('Usando o modelo aprendido: ',pth)
-      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=True)
-      printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'a')
+      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=True,num_model=i,fold=fold)
+      printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
     i=i+1
   
 
