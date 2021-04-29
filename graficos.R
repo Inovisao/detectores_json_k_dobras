@@ -19,7 +19,7 @@ library("Metrics")
 # BOXPLOT DO DESEMPENHO ENTRE TÉCNICAS
 #
 dados <- read.table('./dataset/results.csv',sep=',',header=TRUE)
-metricas <- list("mAP50","MAE","RMSE","r")
+metricas <- list("mAP","mAP50","mAP75","MAE","RMSE","r")
 graficos <- list()
 i <- 1
 
@@ -38,8 +38,8 @@ for (metrica in metricas) {
    print(g)
 }
 
-g <- grid.arrange(grobs=graficos, ncol = 2)
-ggsave(paste("./dataset/boxplot.png", sep=""),g, width = 10, height = 10)
+g <- grid.arrange(grobs=graficos, ncol = 3)
+ggsave(paste("./dataset/boxplot.png", sep=""),g, width = 12, height = 10)
 print(g)
 
 

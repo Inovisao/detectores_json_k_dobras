@@ -389,14 +389,16 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   #print(selected_model,'\t',eval_results['bbox_mAP_50'])
   #string_results = selected_model+'\t'+str(eval_results['bbox_mAP_50'])
 
-  string_results = '0,0,0,0'
+  string_results = '0,0,0,0,0,0'
 
   try:
+    mAP=eval_results['bbox_mAP']
     mAP50=eval_results['bbox_mAP_50']
+    mAP75=eval_results['bbox_mAP_75']
     MAE=mean_absolute_error(medidos,preditos)
     RMSE=math.sqrt(mean_squared_error(medidos,preditos))
     r=np.corrcoef(medidos,preditos)[0,1]
-    string_results = str(mAP50)+','+str(MAE)+','+str(RMSE)+','+str(r)
+    string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)
   except:
     print('ERRO ... DEU PROBLEMA NA HORA DE CALCULAR ALGUMA MÉTRICA')
 
@@ -443,7 +445,7 @@ print('======================================================')
 
 printToFile('ml,fold,groundtruth,predicted','dataset/counting.csv','w')
 
-printToFile('ml,fold,mAP50,MAE,RMSE,r','dataset/results.csv','w')
+printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r','dataset/results.csv','w')
 i=1
 for selected_model in REDES:
     for f in np.arange(1,DOBRAS+1):
