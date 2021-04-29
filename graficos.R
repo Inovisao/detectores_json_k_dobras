@@ -137,13 +137,14 @@ print(g)
 # HISTOGRAMA DA DISTRIBUIÇÃO DOS DADOS DO CONJUNTO DE TESTE
 # (CONTAGENS MANUAIS)
 
-ggplot(filtrado, aes(x=groundtruth))+
+g <- ggplot(filtrado, aes(x=groundtruth))+
    geom_histogram(color="darkblue", fill="lightblue")+
    xlab("Objects Countings")+
    ylab("Density")+
-   ggtitle("Histogram & Density Curve for Ground Truth Countings")
+   ggtitle("Histogram for Ground Truth Countings (Test Set)")
 
-
+ggsave(paste("./dataset/histogram.png", sep=""),g)
+print(g)
 
 #dados <- read.table('../results_dl/resultados.csv',sep=',',header=TRUE)
 #
