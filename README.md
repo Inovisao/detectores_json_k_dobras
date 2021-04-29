@@ -23,6 +23,10 @@ Driver nvidia: 450.66
 - Descompacte dentro da pasta all (vai criar uma subpasta chamada train)
 - Rode o utilitário que vai preparar os dados e separar nas dobras
 
+$ cd dataset/all/
+$ unzip exemplo_anotacoes_roboflow.zip
+$ 
+
 $ cd utils
 $ ./preparaDadosPelaPrimeiraVez.sh
 
