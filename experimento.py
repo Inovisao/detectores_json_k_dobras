@@ -192,7 +192,7 @@ def setCFG(selected_model,
   cfg.work_dir = os.path.join(data_root,fold,'MModels/%s'%(selected_model))
   print('Modelos serão salvos aqui: ',cfg.work_dir)
   cfg.total_epochs = total_epochs
-#  cfg.runner.max_epochs = total_epochs
+  cfg.runner.max_epochs = total_epochs  # EU TIVE QUE COMENTAR ESTA LINHA UMA VEZ PARA FUNCIONAR. NÃO SEI BEM O MOTIVO.
 
   cfg.optimizer.lr = learning_rate 
   #cfg.lr_config.warmup = None
