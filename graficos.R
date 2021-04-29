@@ -115,7 +115,7 @@ for (net in nets) {
    RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
    MAE = mae(filtrado$groundtruth,filtrado$predicted)
    R = cor(filtrado$groundtruth,filtrado$predicted)
-   TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f R = %.3f",net,RMSE,MAE,R)
+   TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
 
    g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
         geom_point()+
@@ -128,7 +128,7 @@ for (net in nets) {
 }
 
 g <- grid.arrange(grobs=graficos, ncol = 1)
-ggsave(paste("./dataset/counting.png", sep=""),g, width = 10, height = 8)
+ggsave(paste("./dataset/counting.png", sep=""),g, width = 8, height = 8)
 print(g)
 
 

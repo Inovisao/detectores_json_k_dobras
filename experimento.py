@@ -328,7 +328,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
   coco_dataset = CocoDataset(ann_file=ann_file, classes=cfg.classes,data_root=cfg.data_root,img_prefix=img_prefix,pipeline=cfg.train_pipeline,filter_empty_gt=False)
 
-  MAX_BOX=100
+  MAX_BOX=1000
   results=[]
   medidos=[]
   preditos=[]
@@ -348,7 +348,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     #vis.imshow_gt_det_bboxes(imagex,dict(gt_bboxes=bboxes, gt_labels=np.repeat(1, len(bboxes))), resultx,det_bbox_color=(0,100,0), show=True,score_thr=0.5)
 
     objetos_medidos=bboxes.shape[0] # Total de objetos marcados manualmente (groundtruth)
-    for j in range(min(MAX_BOX, bboxes.shape[0])): # Até 100 bboxes
+    for j in range(min(MAX_BOX, bboxes.shape[0])): 
       left_top = (bboxes[j, 0], bboxes[j, 1])
       right_bottom = (bboxes[j, 2], bboxes[j, 3])
       imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=2)
