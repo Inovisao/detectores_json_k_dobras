@@ -10,7 +10,7 @@
 #
 
 DOBRAS=4
-EPOCAS=100
+EPOCAS=200
 TAXA_APRENDIZAGEM=0.1
 
 # Coloque True se quiser apenas testar redes previamente treinada
@@ -96,19 +96,19 @@ plt.rcParams["axes.grid"] = False
 # Dentro do site procure por um link chamado 'model' (podem ter vários, para as várias versões da
 # rede que você pode escolher)
 MODELS_CONFIG = {
-    'vfnet_r50': {
+    'vfnet': {
         'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
     },
-    'atss_r50':{
+    'atss':{
         'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
     },
-    'retinanet_r50':{
+    'retinanet':{
         'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
     },
-    'faster_r50':{
+    'faster':{
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
@@ -355,16 +355,23 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     
     #RESULTADOS BBOXS VERDES Prediction
     bboxes = resultx[0]
-    objetos_preditos=bboxes.shape[0] # Total de objetos preditos automaticamente
-
-    medidos.append(objetos_medidos)
-    preditos.append(objetos_preditos)
-
+    
+    objetos_preditos=0
     for j in range(min(MAX_BOX, bboxes.shape[0])):
       if bboxes[j,4] > 0.5:
+        objetos_preditos=objetos_preditos+1  # Total de objetos preditos automaticamente (usando IoU > 0.5)
         left_top = (bboxes[j, 0], bboxes[j, 1])
         right_bottom = (bboxes[j, 2], bboxes[j, 3])
         imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)
+        
+    # Guarda todas as contagens, manuais e preditas, de cada imagem em uma lista
+    medidos.append(objetos_medidos)
+    preditos.append(objetos_preditos)
+
+    # Mostra as contagens na imagem que será salva
+    imagex=cv2.putText(imagex, str(objetos_medidos),(5,30), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('red'), 1)
+    imagex=cv2.putText(imagex, str(objetos_preditos),(5,60), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('green'), 1)
+
 
     if show_imgs and i<10:  ## VAI MOSTRAR APENAS 10 IMAGENS PARA NÃO FICAR LENTO!
       cv2.imshow(imagex)
@@ -374,10 +381,10 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
       if not os.path.exists(save_path):
         os.makedirs(save_path)
       img_path = os.path.join(save_path ,dt['file_name'])
-      
-
       print('Salvando Imagens com Resultados Em:',img_path)
       print("Salvou?: ",cv2.imwrite(img_path,imagex))
+
+
 
     results.append(resultx)
     printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos),'dataset/counting.csv','a')
