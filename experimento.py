@@ -12,7 +12,8 @@
 DOBRAS=4
 EPOCAS=200
 TAXA_APRENDIZAGEM=0.1
-
+CLASSES=('corn',)
+#CLASSES=('cheek_forehead','cheek_nose','face','forehead_nose','side_face',)
 # Coloque True se quiser apenas testar redes previamente treinada
 APENAS_TESTA=False
 
@@ -96,14 +97,6 @@ plt.rcParams["axes.grid"] = False
 # Dentro do site procure por um link chamado 'model' (podem ter vários, para as várias versões da
 # rede que você pode escolher)
 MODELS_CONFIG = {
-    'vfnet': {
-        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
-    },
-    'atss':{
-        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
-    },
     'retinanet':{
         'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
@@ -112,7 +105,15 @@ MODELS_CONFIG = {
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
-    
+    'vfnet': {
+        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
+    },
+    'atss':{
+        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+    },
+
 }
 
 print('Arquiteturas que serão testadas:')
@@ -432,7 +433,7 @@ if(not APENAS_TESTA):
       print('-- RODANDO COM A REDE ',selected_model,' NA DOBRA ',f)
       print('------------------------------------------------------')
       fold = 'fold_'+str(f)
-      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=('Corn',),fold=fold)
+      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
       trainModel(cfg)
 
 
@@ -461,7 +462,7 @@ for selected_model in REDES:
       print('------------------------------------------------------')
 
       fold = 'fold_'+str(f)
-      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=('Corn',),fold=fold)
+      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
 
       pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
       print('Usando o modelo aprendido: ',pth)

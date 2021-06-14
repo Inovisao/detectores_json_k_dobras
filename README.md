@@ -43,6 +43,10 @@ fazer um ajuste relativo a base que usamos para testar (ovos de aedes)
                                              dentro código Corn por ovo
 - Remove a categoria zero (precisa ter uma única categoria)
 
+NÃO USE ESPAÇOS NOS NOMES DAS CLASSES: Tem um script em utils chamado 
+tiraEspacoNomesClasses.sh que pode ser modificado para arrumar o seu
+arquivo json se você usou espaços ou caracteres especiais
+
 CUIDADO: Estes ajustes podem não ser necessários para o seu banco de imagens. 
 Neste caso, você pode rodar estes dois comandos aqui separadamente
 
