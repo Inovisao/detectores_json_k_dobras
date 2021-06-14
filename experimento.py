@@ -11,7 +11,7 @@
 
 DOBRAS=4
 EPOCAS=200
-TAXA_APRENDIZAGEM=0.1
+TAXA_APRENDIZAGEM=0.01
 CLASSES=('corn',)
 #CLASSES=('cheek_forehead','cheek_nose','face','forehead_nose','side_face',)
 # Coloque True se quiser apenas testar redes previamente treinada
