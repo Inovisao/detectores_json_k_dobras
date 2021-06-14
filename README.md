@@ -81,21 +81,24 @@ $ ./roda.sh
 # 
 
 Gráficos e arquivos .csv:
-- Na pasta dataset são criados 2 gráficos:
-  - boxplot.png : boxplot comparando o desempenho das técnicas)
-  - history.png : curvas de aprendizagem usando conjunto de validação)
+- Na pasta dataset são criados 4 gráficos:
+  - boxplot.png : boxplot comparando o desempenho das técnicas (usando 6 métricas)
+  - history.png : curvas de aprendizagem usada conjunto de validação (usa a primeira dobra)
+  - histogram.png : histograma da distribuição da quantidade de objetos por imagem
+  - counting.png : linha de regressão entre o esperado (measured) e preditos
 - Este gráficos são gerados a partir destes dois arquivos:
   - results.csv : resultados por técnica, tamanho da caixa e dobra
   - epocas.csv : evolução da perda no conjunto de validação durante o treinamento
+  - counting.csv : lista de objetos medidos (ground-truth) e objetos contados automaticamente pela rede
 
 Arquivo de LOG:
 - Um único arquivo de log com informações sobre todas as redes e o
   histórico da aprendizagem é salvo na primeira dobra na pasta
   correspondente ao primeiro modelo treinado. Exemplo:
   ./dataset/fold_1/MModels/vfnet_r50/20210423_180309.log
-- Também são salvos artigos de log no formato .json  separadamente
+- Também são salvos arquivos de log no formato .json  separadamente
   para cada dobra e rede utilizada. Exemplo:
-  dataset/fold_3/MModels/atss_r50/20210424_061001.log.json
+  dataset/fold_1/MModels/atss_r50/20210424_061001.log.json
  
   
 Imagens com Resultados:
