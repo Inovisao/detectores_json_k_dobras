@@ -452,7 +452,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
         right_bottom = (int(bboxes2[j, 2]), int(bboxes2[j, 3])) 
         TP = False
         for box in ground_thruth:          
-          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > 0.3:
+          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > 0.3: # IOU > 0.3
             imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)    
             TP = True          
 

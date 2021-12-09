@@ -1,19 +1,25 @@
 # __compara_detectores
-__autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS)
-             Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
-__versao__: 1.0.0 
+__autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS) 
+             1 - Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
+             2 - Adaptações feitas por Marcelo Kuchar (marcelokuchar@gmail.com)
+__versao__: 1.0.1 
 
 Objetivo: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
 de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Robodlow no formato COCO Json
 
 ### Instalação e dependências:
 
-Testado no Ubuntu 20.04 com python 3.7.10
+Testado no Ubuntu 20.04 com python 3.7
 Leia o arquivo install.sh para ver o que é preciso instalar
 (a criação do ambiente conda deve ser feito FORA do script de instalação) 
+mmdetection 2.12.0 - incluso no git 
+(não funciona para versões mais recentes do mmdetection)
 
-Placa gráfica: GTX 1070
-Driver nvidia: 450.66
+Placa gráfica: GTX 3060
+Driver nvidia: 460
+
+
+Executar Install.sh #instala as dependências.
 
 
 ### Preparação dos dados
@@ -98,6 +104,9 @@ Imagens com Resultados:
 - Na pasta ./dataset são criadas subpastas com o prefixo
   "prediction_" contendo cada imagem do conjunto de teste com o
   resultado das detecções mostranda com retângulos em verde
+
+Precisão e Recall são cálculados sobre as predições com confiança >= 50% e com 0.3 IOU sobre uma caixa verdade (caixa anotada manualmente) para modificar esses valores encontre a linha 449 e 455
+
 
 Outras informações:
 - Os pesos da rede, os hyperparâmetros usados, etc também são gravados nas pastas 
