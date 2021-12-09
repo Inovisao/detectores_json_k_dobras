@@ -10,7 +10,7 @@
 # Downgrade do cudatoolkit para conseguir compilar o mmcv
 # (se tiver uma GPU mais nova, pode não ser necessário fazer
 # o downgrade)
-conda install cudatoolkit=10.1
+conda install cudatoolkit=11.2
 
 # Instala o pytorch (um concorrente do tensorflow)
 conda install pytorch torchvision -c pytorch -y  
@@ -21,9 +21,9 @@ conda list | grep cuda
 # Tem que trocar torch1.8.1 e cu101 pela versão correspondente ao
 # pytorch e cuda instalados na sua máquina (ver resultado do comando
 # anterior)
-pip install mmcv-full==1.2.7 -f https://download.openmmlab.com/mmcv/dist/cu101/torch1.8.1/index.html
+pip install mmcv-full==1.3.5
 
-git clone https://github.com/open-mmlab/mmdetection.git
+#git clone https://github.com/open-mmlab/mmdetection.git
 cd mmdetection
 pip install -r requirements/build.txt
 pip install -v -e .  

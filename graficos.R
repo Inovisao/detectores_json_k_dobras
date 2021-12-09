@@ -2,6 +2,7 @@
 #install.packages("psych")
 
 library("ggplot2")
+#library("ggalt")
 library("gridExtra")
 library("plyr")
 library("stringr")
@@ -14,29 +15,133 @@ library("ExpDes.pt")
 library(tidyr)
 library("Metrics")
 
+
+options(scipen = 999)
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
 # BOXPLOT DO DESEMPENHO ENTRE TÉCNICAS
 #
 dados <- read.table('./dataset/results.csv',sep=',',header=TRUE)
+
 metricas <- list("mAP","mAP50","mAP75","MAE","RMSE","r")
 graficos <- list()
 i <- 1
 
-for (metrica in metricas) {
-   print(metrica)
-   TITULO = sprintf("Boxplot for %s",metrica)
 
-      g <- ggplot(dados, aes_string(x=dados$ml, y=metrica,fill=dados$ml)) + 
-           geom_boxplot(alpha=0.3)+
-#           scale_fill_brewer(palette="Purples")+
-           labs(title=TITULO,x="ML Technique", y = metrica)+
-           theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-   
-   graficos[[i]] <- g
-   i = i + 1
-   print(g)
-}
+# for (metrica in metricas) {
+#    print(metrica)
+#    TITULO = sprintf("Boxplot for %s",metrica)
+#       print(dados$mAP)
+#       g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP,fill=dados$ml)) + 
+#            geom_boxplot()+
+# #           scale_fill_brewer(palette="Purples")+
+#            labs(title=TITULO,x="ML Technique", y = metrica)+
+#            theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+#    
+#    graficos[[i]] <- g
+#    i = i + 1
+#    print(g)
+# }
+
+TITULO = sprintf("Boxplot for mAP50")
+print(dados$mAP50)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP50,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "mAP50")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for mAP")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "mAP")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for mAP75")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP75,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "mAP75")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for Precision")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$precision,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "Precision")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+
+TITULO = sprintf("Boxplot for Recall")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$recall,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "Recall")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for AR@100")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$AR_100,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "AR")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for MAE")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$MAE,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "MAE")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for RMSE")
+print(dados$mAP)
+g <- ggplot(dados, aes(x=dados$ml, y=dados$RMSE,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "RMSE")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
+TITULO = sprintf("Boxplot for r")
+g <- ggplot(dados, aes(x=dados$ml, y=dados$r,fill=dados$ml)) + 
+  geom_boxplot()+
+  #           scale_fill_brewer(palette="Purples")+
+  labs(title=TITULO,x="ML Technique", y = "r")+
+  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
+
+graficos[[i]] <- g
+i = i + 1
+
 
 g <- grid.arrange(grobs=graficos, ncol = 3)
 ggsave(paste("./dataset/boxplot.png", sep=""),g, width = 12, height = 10)
@@ -49,7 +154,7 @@ print(g)
 # CURVAS DE APRENDIZAGEM
 #
 
-nets <- levels(dados$ml) 
+nets <- levels(as.factor(dados$ml))
 contaDobras <- dados[dados$ml == nets[1], ]
 
 DOBRAS=nrow(contaDobras)
@@ -107,7 +212,7 @@ dados <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
 graficos <- list()
 i <- 1
 
-
+print(nets)
 for (net in nets) {
 
    filtrado <- dados[dados$ml == net, ]
@@ -122,7 +227,7 @@ for (net in nets) {
         geom_smooth(method='lm')+
         labs(title=TITULO,x="Measured", y = "Predicted")
 
-   
+   print(g)
    graficos[[i]] <- g
    i = i + 1
 }
