@@ -9,10 +9,17 @@
 # DEFINE ALGUNS HIPERPARÂMETROS
 #
 
+<<<<<<< HEAD
 DOBRAS=4
 EPOCAS=200
 TAXA_APRENDIZAGEM=0.01
 CLASSES=('corn',)
+=======
+DOBRAS=5
+EPOCAS=25
+
+CLASSES=('eucaliptos',)
+>>>>>>> v2. com mmdetection 2.12
 #CLASSES=('cheek_forehead','cheek_nose','face','forehead_nose','side_face',)
 # Coloque True se quiser apenas testar redes previamente treinada
 APENAS_TESTA=False
@@ -96,6 +103,15 @@ plt.rcParams["axes.grid"] = False
 #
 # Dentro do site procure por um link chamado 'model' (podem ter vários, para as várias versões da
 # rede que você pode escolher)
+
+
+#Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
+TAXA_APRENDIZAGEM=[0.05,0.01,0.05,0.01,0.05,0.05]
+#retinanet = 0.05 bons resultados
+#atss = 0.05 bons resultados
+#sabl = 0.05 bons resultados
+#fovea
+
 MODELS_CONFIG = {
     'retinanet':{
         'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
@@ -105,20 +121,39 @@ MODELS_CONFIG = {
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
+<<<<<<< HEAD
+=======
+    'atss':{
+        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+    },
+>>>>>>> v2. com mmdetection 2.12
     'vfnet': {
         'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
     },
+<<<<<<< HEAD
     'atss':{
         'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
     },
 
+=======
+    'sabl': {
+        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
+    },
+     
+     'fovea': {
+        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
+    },
+>>>>>>> v2. com mmdetection 2.12
 }
 
 print('Arquiteturas que serão testadas:')
 print(MODELS_CONFIG)
-
+REDES=[k for k in MODELS_CONFIG.keys()]
 
 
 
@@ -132,13 +167,15 @@ def setCFG(selected_model,
            data_root,
            classes,
            total_epochs=EPOCAS,
-           learning_rate=TAXA_APRENDIZAGEM,
+           learning_rate=0.01,
            fold='fold_1'):
 
   config_file = os.path.join(pasta_mmdetection,MODELS_CONFIG[selected_model]['config_file'])
+  learning_rate = TAXA_APRENDIZAGEM[REDES.index(selected_model)]
+  print(str(REDES.index(selected_model))+ "  " + str(learning_rate))
 
   from mmdet.apis import set_random_seed
-  print('Configuração da rede: ',config_file)
+  #print('Configuração da rede: ',config_file)
   cfg = Config.fromfile(config_file)
 
   # Modify dataset type and path
@@ -201,10 +238,10 @@ def setCFG(selected_model,
   cfg.lr_config.policy = 'step'
 
   # Change the evaluation metric since we use customized dataset.
-  cfg.evaluation.metric = 'bbox'
+  cfg.evaluation.metric = 'mAP'
   cfg.evaluation.save_best='auto'
   # We can set the evaluation interval to reduce the evaluation times
-  cfg.evaluation.interval = 1
+  cfg.evaluation.interval = 12
   # We can set the checkpoint saving interval to reduce the storage cost
   #cfg.checkpoint_config.interval = total_epochs/5
   cfg.checkpoint_config.interval = total_epochs # Vai salvar só o último mesmo
@@ -257,6 +294,7 @@ def trainModel(cfg):
   timestamp = time.strftime('%Y%m%d_%H%M%S', time.localtime())
   log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
   logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
+  pkl = osp.join('--out', cfg.work_dir )
 
   # init the meta dict to record some important information such as
   # environment info and seed, which will be logged
@@ -299,8 +337,59 @@ def trainModel(cfg):
 
   train_detector(model, datasets, cfg, distributed=False, validate=False,timestamp=timestamp,meta=meta)
 
+# IOU 
+def get_iou(bb1, bb2):
+    """
+    Calculate the Intersection over Union (IoU) of two bounding boxes.
 
+    Parameters
+    ----------
+    bb1 : dict
+        Keys: {'x1', 'x2', 'y1', 'y2'}
+        The (x1, y1) position is at the top left corner,
+        the (x2, y2) position is at the bottom right corner
+    bb2 : dict
+        Keys: {'x1', 'x2', 'y1', 'y2'}
+        The (x, y) position is at the top left corner,
+        the (x2, y2) position is at the bottom right corner
 
+    Returns
+    -------
+    float
+        in [0, 1]
+    """
+    # print(bb1)
+    # print(bb2)
+    assert bb1['x1'] < bb1['x2']
+    assert bb1['y1'] < bb1['y2']
+    assert bb2['x1'] < bb2['x2']
+    assert bb2['y1'] < bb2['y2']
+
+    # determine the coordinates of the intersection rectangle
+    x_left = max(bb1['x1'], bb2['x1'])
+    y_top = max(bb1['y1'], bb2['y1'])
+    x_right = min(bb1['x2'], bb2['x2'])
+    y_bottom = min(bb1['y2'], bb2['y2'])
+
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+
+    # The intersection of two axis-aligned bounding boxes is always an
+    # axis-aligned bounding box
+    intersection_area = (x_right - x_left) * (y_bottom - y_top)
+
+    # compute the area of both AABBs
+    bb1_area = (bb1['x2'] - bb1['x1']) * (bb1['y2'] - bb1['y1'])
+    bb2_area = (bb2['x2'] - bb2['x1']) * (bb2['y2'] - bb2['y1'])
+
+    # compute the intersection over union by taking the intersection
+    # area and dividing it by the sum of prediction + ground-truth
+    # areas - the interesection area
+    iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
+    assert iou >= 0.0
+    assert iou <= 1.0
+    print("iou:",str(iou))
+    return iou
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -308,7 +397,7 @@ def trainModel(cfg):
 # FUNÇÃO QUE APLICA O MODELO APRENDIDO NOS DADOS DE TESTE
 #
 def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_imgs=False,num_model=1,fold='fold_1'):
-  
+
   # build the model from a config file and a checkpoint file
   cfg.data.test.test_mode = True
   torch.backends.cudnn.benchmark = True
@@ -333,6 +422,9 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   results=[]
   medidos=[]
   preditos=[]
+  all_TP = 0
+  all_FP = 0
+  all_GT=0
   for i,dt in enumerate(coco_dataset.data_infos):
 
     print('Arquivo de imagens:',dt['file_name'])
@@ -340,6 +432,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     imagex=None
     imagex=mmcv.imread(os.path.join(coco_dataset.img_prefix,dt['file_name']))
     resultx = inference_detector(modelx, imagex)
+    #modelx.show_result(imagex, resultx, score_thr=0.3, out_file=models_path + dt['file_name'])
 
 
     #GT BBOXS VERMELHOS  GroundTruth  
@@ -347,32 +440,73 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     bboxes = np.insert(ann['bboxes'],4,0.91,axis=1)
 
     #vis.imshow_gt_det_bboxes(imagex,dict(gt_bboxes=bboxes, gt_labels=np.repeat(1, len(bboxes))), resultx,det_bbox_color=(0,100,0), show=True,score_thr=0.5)
-
+    ground_thruth = []
     objetos_medidos=bboxes.shape[0] # Total de objetos marcados manualmente (groundtruth)
     for j in range(min(MAX_BOX, bboxes.shape[0])): 
-      left_top = (bboxes[j, 0], bboxes[j, 1])
-      right_bottom = (bboxes[j, 2], bboxes[j, 3])
-      imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=2)
+      left_top = (int(bboxes[j, 0]), int(bboxes[j, 1]))
+      right_bottom = (int(bboxes[j, 2]), int(bboxes[j, 3]))
+      ground_thruth.append({'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]})
+      imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('blue'), thickness=1)
     
     #RESULTADOS BBOXS VERDES Prediction
-    bboxes = resultx[0]
-    
+    bboxes2 = resultx[0]
+    # print(bboxes2)
+    # print("detections: " + str(len(bboxes2)))
+    # print("ground truths: " + str(len(bboxes)))
+    # cont=0
+    # for j in range(len(bboxes2)): 
+    #   if bboxes2[j][4]>=0.5: #score_thr  ou seja, a confiança
+    #     cont+=1
+    # print("detections IOU:" + str(cont))
+    # print("Precision: "+ str(cont/len(bboxes2)))
+    # print("Recall: "+ str(cont/len(bboxes)))
     objetos_preditos=0
-    for j in range(min(MAX_BOX, bboxes.shape[0])):
-      if bboxes[j,4] > 0.5:
+    cont_TP=0
+    cont_FP=0
+    for j in range(min(MAX_BOX, bboxes2.shape[0])):
+      if bboxes2[j,4] >= 0.5: #score_thr  ou seja, a confiança
         objetos_preditos=objetos_preditos+1  # Total de objetos preditos automaticamente (usando IoU > 0.5)
-        left_top = (bboxes[j, 0], bboxes[j, 1])
-        right_bottom = (bboxes[j, 2], bboxes[j, 3])
-        imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)
+        left_top = (int(bboxes2[j, 0]), int(bboxes2[j, 1]))
+        right_bottom = (int(bboxes2[j, 2]), int(bboxes2[j, 3])) 
+        TP = False
+        for box in ground_thruth:          
+          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > 0.3:
+            imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)    
+            TP = True          
+
+        if TP == True:
+          cont_TP+=1
+        else:
+          cont_FP+=1
+          imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=2)    
+        
+    print("TP:"+ str(cont_TP))
+    all_TP+=cont_TP    
+    print("FP:"+ str(cont_FP)) 
+    all_FP+=cont_FP
+    all_GT+=len(bboxes)
+              
+        
+        
         
     # Guarda todas as contagens, manuais e preditas, de cada imagem em uma lista
     medidos.append(objetos_medidos)
     preditos.append(objetos_preditos)
 
     # Mostra as contagens na imagem que será salva
-    imagex=cv2.putText(imagex, str(objetos_medidos),(5,30), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('red'), 1)
+    imagex=cv2.putText(imagex, str(objetos_medidos),(5,30), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('blue'), 1)
     imagex=cv2.putText(imagex, str(objetos_preditos),(5,60), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('green'), 1)
+    try:
+        precision = round(cont_TP/(cont_TP+cont_FP),2)
+    except ZeroDivisionError:
+        precision = 0
+    try:
+        recall = round(cont_TP/len(bboxes),2)
+    except ZeroDivisionError:
+        recall = 0
 
+    imagex=cv2.putText(imagex, "P:"+str(precision),(5,90), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('yellow'), 1)
+    imagex=cv2.putText(imagex, "R:"+str(recall),(5,120), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('yellow'), 1)
 
     if show_imgs and i<10:  ## VAI MOSTRAR APENAS 10 IMAGENS PARA NÃO FICAR LENTO!
       cv2.imshow(imagex)
@@ -388,16 +522,22 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
 
     results.append(resultx)
-    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos),'dataset/counting.csv','a')
+    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos)+','+str(cont_TP)+','+str(cont_FP),'dataset/counting.csv','a')
     
-    
+  print("preditos:")  
+  print(preditos) 
   eval_results = coco_dataset.evaluate(results, classwise=True)
+  eval_results2 = coco_dataset.evaluate(results, classwise=True, jsonfile_prefix = "metric/prefix",metric='proposal')
+  #recall = coco_dataset.fast_eval_recall(results,proposal_nums=(100), iou_thrs  = 0.5)
+  coco_dataset.results2json(results, pasta_dataset)
   print('Resultados do comando coco_dataset.evaluate:')
   print(eval_results)
+  print(eval_results2)
+  # print(results)
   #print(selected_model,'\t',eval_results['bbox_mAP_50'])
   #string_results = selected_model+'\t'+str(eval_results['bbox_mAP_50'])
 
-  string_results = '0,0,0,0,0,0'
+  string_results = '0,0,0,0,0,0,0,0,0'
 
   try:
     mAP=eval_results['bbox_mAP']
@@ -405,8 +545,20 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     mAP75=eval_results['bbox_mAP_75']
     MAE=mean_absolute_error(medidos,preditos)
     RMSE=math.sqrt(mean_squared_error(medidos,preditos))
-    r=np.corrcoef(medidos,preditos)[0,1]
-    string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)
+    try:
+      r=np.corrcoef(medidos,preditos)[0,1]
+    except ZeroDivisionError:
+      r = 0
+    try:
+      precision_fold = round(all_TP/(all_TP+all_FP),2)
+    except ZeroDivisionError:
+      precision_fold = 0
+    try:
+      recall_fold = round(all_TP/all_GT,2)
+    except ZeroDivisionError:
+      recall_fold = 0
+    
+    string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)+','+str(precision_fold)+','+str(recall_fold)+','+str(eval_results2['AR@100'])
   except:
     print('ERRO ... DEU PROBLEMA NA HORA DE CALCULAR ALGUMA MÉTRICA')
 
@@ -424,7 +576,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 # USANDO AS 5 DOBRAS 
 #
 
-REDES=[k for k in MODELS_CONFIG.keys()]
+
 
 if(not APENAS_TESTA):
   for selected_model in REDES:
@@ -451,9 +603,9 @@ print('======================================================')
 print(' INICIANDO TESTE - INICIANDO TESTE - INICIANDO TESTE')
 print('======================================================')
 
-printToFile('ml,fold,groundtruth,predicted','dataset/counting.csv','w')
+printToFile('ml,fold,groundtruth,predicted,TP,FP','dataset/counting.csv','w')
 
-printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r','dataset/results.csv','w')
+printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,AR_100','dataset/results.csv','w')
 i=1
 for selected_model in REDES:
     for f in np.arange(1,DOBRAS+1):

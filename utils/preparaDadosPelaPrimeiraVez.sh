@@ -5,5 +5,4 @@
 
 ./apagaResultados.sh
 ./removeCategoriaZero.sh
-./trocaPorCorn.sh
-python geraDobras.py -folds=4 -valperc=0.3
+python geraDobras.py -folds=5 -valperc=0.3

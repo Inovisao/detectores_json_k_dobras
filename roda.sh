@@ -1,2 +1,2 @@
 python experimento.py
-Rscript graficos.R
+#Rscript graficos.R
