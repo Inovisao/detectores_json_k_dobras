@@ -12,6 +12,7 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 Testado no Ubuntu 20.04 com python 3.7
 Leia o arquivo install.sh para ver o que é preciso instalar
 (a criação do ambiente conda deve ser feito FORA do script de instalação) 
+
 mmdetection 2.12.0 - incluso no git 
 (não funciona para versões mais recentes do mmdetection)
 
@@ -19,7 +20,7 @@ Placa gráfica: GTX 3060
 Driver nvidia: 460
 
 
-Executar Install.sh #instala as dependências.
+Install.sh #instala as dependências.
 
 
 ### Preparação dos dados
