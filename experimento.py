@@ -9,17 +9,10 @@
 # DEFINE ALGUNS HIPERPARÂMETROS
 #
 
-<<<<<<< HEAD
-DOBRAS=4
-EPOCAS=200
-TAXA_APRENDIZAGEM=0.01
-CLASSES=('corn',)
-=======
 DOBRAS=5
 EPOCAS=25
 
 CLASSES=('eucaliptos',)
->>>>>>> v2. com mmdetection 2.12
 #CLASSES=('cheek_forehead','cheek_nose','face','forehead_nose','side_face',)
 # Coloque True se quiser apenas testar redes previamente treinada
 APENAS_TESTA=False
@@ -107,10 +100,7 @@ plt.rcParams["axes.grid"] = False
 
 #Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
 TAXA_APRENDIZAGEM=[0.05,0.01,0.05,0.01,0.05,0.05]
-#retinanet = 0.05 bons resultados
-#atss = 0.05 bons resultados
-#sabl = 0.05 bons resultados
-#fovea
+
 
 MODELS_CONFIG = {
     'retinanet':{
@@ -121,24 +111,14 @@ MODELS_CONFIG = {
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
-<<<<<<< HEAD
-=======
     'atss':{
         'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
     },
->>>>>>> v2. com mmdetection 2.12
     'vfnet': {
         'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
     },
-<<<<<<< HEAD
-    'atss':{
-        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
-    },
-
-=======
     'sabl': {
         'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
@@ -148,7 +128,6 @@ MODELS_CONFIG = {
         'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
     },
->>>>>>> v2. com mmdetection 2.12
 }
 
 print('Arquiteturas que serão testadas:')
@@ -470,7 +449,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
         right_bottom = (int(bboxes2[j, 2]), int(bboxes2[j, 3])) 
         TP = False
         for box in ground_thruth:          
-          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > 0.3:
+          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > 0.3: # IOU > 0.3
             imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)    
             TP = True          
 

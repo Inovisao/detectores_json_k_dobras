@@ -1,19 +1,27 @@
 # __compara_detectores
-__autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS)
-             Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
-__versao__: 1.0.0 
+__autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS) 
+             1 - Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
+             2 - Adaptações feitas por Marcelo Kuchar (marcelokuchar@gmail.com)
+__versao__: 1.0.1 
 
 Objetivo: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
 de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Robodlow no formato COCO Json
 
 ### Instalação e dependências:
 
-Testado no Ubuntu 20.04 com python 3.7.10
+Testado no Ubuntu 20.04 com python 3.7
+
 Leia o arquivo install.sh para ver o que é preciso instalar
 (a criação do ambiente conda deve ser feito FORA do script de instalação) 
 
-Placa gráfica: GTX 1070
-Driver nvidia: 450.66
+mmdetection 2.12.0 - incluso no git 
+(não funciona para versões mais recentes do mmdetection)
+
+Placa gráfica: GTX 3060
+Driver nvidia: 460
+
+
+Install.sh #instala as dependências.
 
 
 ### Preparação dos dados
@@ -42,10 +50,6 @@ fazer um ajuste relativo a base que usamos para testar (ovos de aedes)
 - Trocar o nome categoria de ovo para Corn # Daria também para trocar
                                              dentro código Corn por ovo
 - Remove a categoria zero (precisa ter uma única categoria)
-
-NÃO USE ESPAÇOS NOS NOMES DAS CLASSES: Tem um script em utils chamado 
-tiraEspacoNomesClasses.sh que pode ser modificado para arrumar o seu
-arquivo json se você usou espaços ou caracteres especiais
 
 CUIDADO: Estes ajustes podem não ser necessários para o seu banco de imagens. 
 Neste caso, você pode rodar estes dois comandos aqui separadamente
@@ -81,30 +85,30 @@ $ ./roda.sh
 # 
 
 Gráficos e arquivos .csv:
-- Na pasta dataset são criados 4 gráficos:
-  - boxplot.png : boxplot comparando o desempenho das técnicas (usando 6 métricas)
-  - history.png : curvas de aprendizagem usada conjunto de validação (usa a primeira dobra)
-  - histogram.png : histograma da distribuição da quantidade de objetos por imagem
-  - counting.png : linha de regressão entre o esperado (measured) e preditos
+- Na pasta dataset são criados 2 gráficos:
+  - boxplot.png : boxplot comparando o desempenho das técnicas)
+  - history.png : curvas de aprendizagem usando conjunto de validação)
 - Este gráficos são gerados a partir destes dois arquivos:
   - results.csv : resultados por técnica, tamanho da caixa e dobra
   - epocas.csv : evolução da perda no conjunto de validação durante o treinamento
-  - counting.csv : lista de objetos medidos (ground-truth) e objetos contados automaticamente pela rede
 
 Arquivo de LOG:
 - Um único arquivo de log com informações sobre todas as redes e o
   histórico da aprendizagem é salvo na primeira dobra na pasta
   correspondente ao primeiro modelo treinado. Exemplo:
   ./dataset/fold_1/MModels/vfnet_r50/20210423_180309.log
-- Também são salvos arquivos de log no formato .json  separadamente
+- Também são salvos artigos de log no formato .json  separadamente
   para cada dobra e rede utilizada. Exemplo:
-  dataset/fold_1/MModels/atss_r50/20210424_061001.log.json
+  dataset/fold_3/MModels/atss_r50/20210424_061001.log.json
  
   
 Imagens com Resultados:
 - Na pasta ./dataset são criadas subpastas com o prefixo
   "prediction_" contendo cada imagem do conjunto de teste com o
   resultado das detecções mostranda com retângulos em verde
+
+Precisão e Recall são cálculados sobre as predições com confiança >= 50% e com 0.3 IOU sobre uma caixa verdade (caixa anotada manualmente) para modificar esses valores encontre a linha 449 e 455
+
 
 Outras informações:
 - Os pesos da rede, os hyperparâmetros usados, etc também são gravados nas pastas 
