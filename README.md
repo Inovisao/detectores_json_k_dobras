@@ -10,6 +10,7 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 ### Instalação e dependências:
 
 Testado no Ubuntu 20.04 com python 3.7
+
 Leia o arquivo install.sh para ver o que é preciso instalar
 (a criação do ambiente conda deve ser feito FORA do script de instalação) 
 
