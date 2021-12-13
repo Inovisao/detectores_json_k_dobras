@@ -3,24 +3,32 @@
 # FORA DO SCRIPT
 #
 #
-# conda create --name detectores python=3.7.10 -y
+# conda create --name detectores python=3.7 -y
 # conda activate detectores
 
 
-# Downgrade do cudatoolkit para conseguir compilar o mmcv
-# (se tiver uma GPU mais nova, pode não ser necessário fazer
-# o downgrade)
-conda install cudatoolkit=11.2
+# Se precisar instalar versão antigo do CUDA, pode
+# tentar seguir isso: https://varhowto.com/install-pytorch-cuda-10-0/
+# Se precisar instalar o cuda de outra forma, tente isso aqui:
+# https://developer.nvidia.com/cuda-11.2.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=2004&target_type=deblocal
 
-# Instala o pytorch (um concorrente do tensorflow)
-conda install pytorch torchvision -c pytorch -y  
+
+conda install cudatoolkit=11.3 pytorch torchvision -c pytorch
+
+# Recomendo entrar no python e rodar os comandos abaixo para
+# ver se o pytorch está identificando a GPU. Se não tiver,
+# tem que resolver antes de continuar
+python
+>> import torch
+>> print('Torch: ',torch.__version__, torch.cuda.is_available())
 
 # Para saber a versão do pytorch e cuda instalada na sua máquina
 conda list | grep cuda
 
-# Tem que trocar torch1.8.1 e cu101 pela versão correspondente ao
-# pytorch e cuda instalados na sua máquina (ver resultado do comando
-# anterior)
+# Se der erro de incompatilibilidade tenta usar o comando abaixo
+# para ver a versão do cuda no sistema
+# nvcc --version
+# E tenta atualizar baixando o toolkit do site da nvidia
 pip install mmcv-full==1.3.5
 
 #git clone https://github.com/open-mmlab/mmdetection.git
