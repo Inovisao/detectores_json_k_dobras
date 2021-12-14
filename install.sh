@@ -11,6 +11,10 @@
 # tentar seguir isso: https://varhowto.com/install-pytorch-cuda-10-0/
 # Se precisar instalar o cuda de outra forma, tente isso aqui:
 # https://developer.nvidia.com/cuda-11.2.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=2004&target_type=deblocal
+# Outra alternativa (que funcionou na minha máquina), foi mudar na linha
+# de baixo o 11.3 para 10.1 pois quando instalei o nvidia-cuda-toolkit,
+# mesmo tendo um driver para o 11.2, o ubuntu instalou o cuda 10.1
+# e ai dava erro na hora de instalar o mmcv-full
 
 
 conda install cudatoolkit=11.3 pytorch torchvision -c pytorch
