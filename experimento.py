@@ -506,7 +506,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   print("preditos:")  
   print(preditos) 
   eval_results = coco_dataset.evaluate(results, classwise=True)
-  eval_results2 = coco_dataset.evaluate(results, classwise=True, jsonfile_prefix = "metric/prefix",metric='proposal')
+  eval_results2 = coco_dataset.evaluate(results, classwise=True, metric='proposal') 
   #recall = coco_dataset.fast_eval_recall(results,proposal_nums=(100), iou_thrs  = 0.5)
   coco_dataset.results2json(results, pasta_dataset)
   print('Resultados do comando coco_dataset.evaluate:')
