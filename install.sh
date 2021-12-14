@@ -38,10 +38,9 @@ pip install mmcv-full==1.3.5
 cd mmdetection
 pip install -r requirements/build.txt
 pip install -v -e .  
-pip install dicttoxml albumentations terminaltables imagecorruptions 
 cd ..
 
-pip install funcy sklearn
+pip install dicttoxml albumentations terminaltables imagecorruptions funcy sklearn
 
 # Para remover o ambiente e começar tudo de novo
 # conda deactivate
