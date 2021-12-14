@@ -7,7 +7,7 @@
 # conda activate detectores
 
 
-# Se precisar instalar versão antigo do CUDA, pode
+# Se precisar instalar versão antiga do CUDA, pode
 # tentar seguir isso: https://varhowto.com/install-pytorch-cuda-10-0/
 # Se precisar instalar o cuda de outra forma, tente isso aqui:
 # https://developer.nvidia.com/cuda-11.2.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=2004&target_type=deblocal
@@ -29,6 +29,9 @@ conda list | grep cuda
 # para ver a versão do cuda no sistema
 # nvcc --version
 # E tenta atualizar baixando o toolkit do site da nvidia
+# Um comando que pode ser útil também:
+# sudo apt install nvidia-cuda-toolkit
+
 pip install mmcv-full==1.3.5
 
 #git clone https://github.com/open-mmlab/mmdetection.git
