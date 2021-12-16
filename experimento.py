@@ -11,6 +11,8 @@
 
 DOBRAS=5
 EPOCAS=25
+LIMIAR_CLASSIFICADOR=0.5
+LIMIAR_IOU=0.3
 
 CLASSES=('eucaliptos',)
 #CLASSES=('cheek_forehead','cheek_nose','face','forehead_nose','side_face',)
@@ -151,7 +153,9 @@ def setCFG(selected_model,
 
   config_file = os.path.join(pasta_mmdetection,MODELS_CONFIG[selected_model]['config_file'])
   learning_rate = TAXA_APRENDIZAGEM[REDES.index(selected_model)]
-  print(str(REDES.index(selected_model))+ "  " + str(learning_rate))
+  print("Taxa de aprendizagem = " + str(learning_rate))
+  print("Limiar do classificador = " + str(LIMIAR_CLASSIFICADOR))
+  print("Limiar de IOU = " + str(LIMIAR_IOU))
 
   from mmdet.apis import set_random_seed
   #print('Configuração da rede: ',config_file)
@@ -367,7 +371,7 @@ def get_iou(bb1, bb2):
     iou = intersection_area / float(bb1_area + bb2_area - intersection_area)
     assert iou >= 0.0
     assert iou <= 1.0
-    print("iou:",str(iou))
+#   print("iou:",str(iou))
     return iou
 
 #----------------------------------------------------------------------------
@@ -442,14 +446,14 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     objetos_preditos=0
     cont_TP=0
     cont_FP=0
-    for j in range(min(MAX_BOX, bboxes2.shape[0])):
-      if bboxes2[j,4] >= 0.5: #score_thr  ou seja, a confiança
+    for j in range(min(MAX_BOX, bboxes2.shape[0])): 
+      if bboxes2[j,4] >= LIMIAR_CLASSIFICADOR: #score_thr  ou seja, a confiança
         objetos_preditos=objetos_preditos+1  # Total de objetos preditos automaticamente (usando IoU > 0.5)
         left_top = (int(bboxes2[j, 0]), int(bboxes2[j, 1]))
         right_bottom = (int(bboxes2[j, 2]), int(bboxes2[j, 3])) 
         TP = False
         for box in ground_thruth:          
-          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > 0.3: # IOU > 0.3
+          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > LIMIAR_IOU: # IOU > 0.3
             imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)    
             TP = True          
 
@@ -459,9 +463,9 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
           cont_FP+=1
           imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=2)    
         
-    print("TP:"+ str(cont_TP))
+#    print("TP:"+ str(cont_TP))
     all_TP+=cont_TP    
-    print("FP:"+ str(cont_FP)) 
+#    print("FP:"+ str(cont_FP)) 
     all_FP+=cont_FP
     all_GT+=len(bboxes)
               
