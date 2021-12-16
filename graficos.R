@@ -225,14 +225,14 @@ for (net in nets) {
    g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
         geom_point()+
         geom_smooth(method='lm')+
-        labs(title=TITULO,x="Measured", y = "Predicted")
+        labs(title=TITULO ,x="Measured", y = "Predicted")+ theme(plot.title = element_text(size = 10))
 
    print(g)
    graficos[[i]] <- g
    i = i + 1
 }
 
-g <- grid.arrange(grobs=graficos, ncol = 1)
+g <- grid.arrange(grobs=graficos, ncol = 2)
 ggsave(paste("./dataset/counting.png", sep=""),g, width = 8, height = 8)
 print(g)
 
