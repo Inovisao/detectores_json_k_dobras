@@ -19,6 +19,11 @@
 
 conda install cudatoolkit=11.3 pytorch torchvision -c pytorch
 
+# CASO NÃO TENHA GPU, tente o comando abaixo (ou procure
+# no google por "install pytorch without GPU")
+conda install pytorch torchvision cpuonly -c pytorch
+
+
 # Recomendo entrar no python e rodar os comandos abaixo para
 # ver se o pytorch está identificando a GPU. Se não tiver,
 # tem que resolver antes de continuar
