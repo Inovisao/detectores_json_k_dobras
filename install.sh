@@ -17,7 +17,7 @@
 # e ai dava erro na hora de instalar o mmcv-full
 
 # Configuração adotada em 22/03/2022 -> por Junior
-# Os passos a ser seguidos:
+# Os passos seguidos:
 # -----------------------------------------------------------------------------------------------
 # conda create --name detectores python=3.6 -y
 # conda activate detectores
