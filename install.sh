@@ -16,6 +16,23 @@
 # mesmo tendo um driver para o 11.2, o ubuntu instalou o cuda 10.1
 # e ai dava erro na hora de instalar o mmcv-full
 
+# Configuração adotada em 22/03/2022 -> por Junior
+# Os passos a ser seguidos:
+# -----------------------------------------------------------------------------------------------
+# conda create --name detectores python=3.6 -y
+# conda activate detectores
+# pip install -U torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+# pip install mmcv-full==1.3.3
+# git clone https://github.com/open-mmlab/mmdetection.git
+# cd mmdetection
+# pip install -r requirements/build.txt
+# pip install -v -e .  
+# cd ..
+# pip install dicttoxml albumentations terminaltables imagecorruptions funcy sklearn
+#-------------------------------------------------------------------------------------------------
+
+# Para remover o am
+
 
 conda install cudatoolkit=11.3 pytorch torchvision -c pytorch
 
