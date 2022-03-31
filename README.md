@@ -7,7 +7,18 @@ __versao__: 1.0.1
 Objetivo: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
 de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Roboflow no formato COCO Json
 
+
 ### Instalação e dependências:
+
+#### Para rodar no Google Colab 
+
+- Entre https://colab.research.google.com/
+- Crie uma no conta no Colab caso ainda não tenha (dá para usar a do seu gmail)
+- Utilize a opção Upload e suba o arquivo MMdetection_Colab_Drive.ipynb
+- Siga as instruções que estão dentro deste arquivo e que vão aparecer no Colab
+
+
+#### Para rodar na sua própria máquina:
 
 Testado no Ubuntu 20.04 com python 3.7
 
@@ -20,8 +31,8 @@ mmdetection 2.12.0 - incluso no git
 Placa gráfica: GTX 3060
 Driver nvidia: 460
 
-
 Install.sh #instala as dependências.
+
 
 
 ### Preparação dos dados
