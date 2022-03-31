@@ -1,7 +1,7 @@
 # Detectores_json_k_dobras
 __Autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS) 
 
-1 - Adaptações feitas por Hemerson Pistori (pistori@ucdb.br) e Marcelo Kuchar (marcelokuchar@gmail.com)
+Adaptações feitas por Hemerson Pistori (pistori@ucdb.br) e Marcelo Kuchar (marcelokuchar@gmail.com)
 
 __Versao__: 1.0.1 
 
@@ -13,7 +13,7 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 
 #### Para rodar no Google Colab 
 
-- Entre https://colab.research.google.com/
+- Entre no site https://colab.research.google.com/
 - Crie uma no conta no Colab caso ainda não tenha (dá para usar a do seu gmail)
 - Utilize a opção Upload e suba o arquivo MMdetection_Colab_Drive.ipynb
 - Siga as instruções que estão dentro deste arquivo e que vão aparecer no Colab
@@ -44,8 +44,11 @@ Install.sh #instala as dependências.
 - Rode o utilitário que vai preparar os dados e separar nas dobras 
 
 $ cd dataset/all/  
+
 $ unzip exemplo_anotacoes_roboflow.zip
+
 $ cd ../../utils
+
 $ ./preparaDadosPelaPrimeiraVez.sh # Não esqueça antes de criar e iniciar seu ambiente CONDA (ler install.sh). Veja primeiro o que tem dentro deste arquivo pois pode não ser necessário rodá-lo.
 
 - Se necessário, troque o número 4 pela quantidade de dobras que você quiser
