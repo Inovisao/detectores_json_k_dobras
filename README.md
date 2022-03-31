@@ -66,6 +66,7 @@ CUIDADO: Estes ajustes podem não ser necessários para o seu banco de imagens.
 Neste caso, você pode rodar estes dois comandos aqui separadamente
 
 $ ./apagaResultados.sh  # Apaga arquivos gerados na última execução do treinamento
+
 $ python geraDobras.py -folds=4 -valperc=0.3  # Gera as dobras para a validação cruzada 
 
 
@@ -92,9 +93,11 @@ O Inovisão tem um link para vários destes arquivos que são mais usados pelo g
 # 
 
 $ . ./conda_init.sh
-$ ./roda.sh
 
--- Dentro do arquivo roda.sh tem uma chamada para o programa em R (graficos.R) que está comentado, você pode descomentar ou então rodar este comando individualmente depois de treinar as redes
+$ python experimento.py
+
+$ Rscript graficos.R
+
 
 ### Encontrando os resultados
 # 
