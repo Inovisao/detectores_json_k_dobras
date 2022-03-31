@@ -5,7 +5,7 @@ __autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS)
 __versao__: 1.0.1 
 
 Objetivo: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
-de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Robodlow no formato COCO Json
+de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Roboflow no formato COCO Json
 
 ### Instalação e dependências:
 
@@ -27,14 +27,14 @@ Install.sh #instala as dependências.
 ### Preparação dos dados
 # 
 - Use o Roboflow para anotar e coloque tudo como treinamento (não divida em validação e teste)
-- Gere o .zip e coloque na pasta ./dataset/all (TEM UM ARQUIVO DE EXEMPLO LÁ)
-- Descompacte dentro da pasta all (vai criar uma subpasta chamada train)
-- Rode o utilitário que vai preparar os dados e separar nas dobras
+- Gere o .zip e coloque na pasta ./dataset/all 
+- Descompacte dentro da pasta all (vai criar uma subpasta chamada train). Se já existe um pasta train, apague o que tem dentro (na versão atual tem um exemplo pronto com imagens de Eucaliptos lá dentro)
+- Rode o utilitário que vai preparar os dados e separar nas dobras 
 
 $ cd dataset/all/  
 $ unzip exemplo_anotacoes_roboflow.zip
 $ cd ../../utils
-$ ./preparaDadosPelaPrimeiraVez.sh # Não esqueça antes de criar e iniciar seu ambiente CONDA (ler install.sh)
+$ ./preparaDadosPelaPrimeiraVez.sh # Não esqueça antes de criar e iniciar seu ambiente CONDA (ler install.sh). Veja primeiro o que tem dentro deste arquivo pois pode não ser necessário rodá-lo.
 
 - Se necessário, troque o número 4 pela quantidade de dobras que você quiser
   e o 0.3 pelo percentual que você quiser usar para o conjunto de validação
@@ -43,7 +43,7 @@ $ ./preparaDadosPelaPrimeiraVez.sh # Não esqueça antes de criar e iniciar seu 
   procure por "python geraDobras.py -folds=4 -valperc=0.3"
 
 - Os arquivos das anotações gerados ficarão na pasta ./dataset/filesJSON
-  (Confira para ver se geral mesmo)
+  (Confira para ver se gerou mesmo)
 
 O script preparadaDadosPelaPrimeiraVez.sh chama outros dois script para
 fazer um ajuste relativo a base que usamos para testar (ovos de aedes)
@@ -74,12 +74,16 @@ Dentro do site acima procure por um link chamado 'model' (podem ter vários, par
 Você encontrará as outras redes aqui (tem que baixar todas que for usar):
 https://github.com/open-mmlab/mmdetection/tree/master/configs
 
+O Inovisão tem um link para vários destes arquivos que são mais usados pelo grupo (consultem o grupo pelo whatsapp)
+
 
 ### Rodando o treinamento e os testes
 # 
 
 $ . ./conda_init.sh
 $ ./roda.sh
+
+-- Dentro do arquivo roda.sh tem uma chamada para o programa em R (graficos.R) que está comentado, você pode descomentar ou então rodar este comando individualmente depois de treinar as redes
 
 ### Encontrando os resultados
 # 
@@ -107,7 +111,7 @@ Imagens com Resultados:
   "prediction_" contendo cada imagem do conjunto de teste com o
   resultado das detecções mostranda com retângulos em verde
 
-Precisão e Recall são cálculados sobre as predições com confiança >= 50% e com 0.3 IOU sobre uma caixa verdade (caixa anotada manualmente) para modificar esses valores encontre a linha 449 e 455
+Precisão e Recall são calculados sobre as predições com confiança >= 50% e com 0.3 IOU sobre uma caixa verdade (caixa anotada manualmente) para modificar esses valores encontre as linhas 449 e 455 em experimentos.py
 
 
 Outras informações:
