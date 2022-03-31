@@ -15,7 +15,7 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 
 - Entre no site https://colab.research.google.com/
 - Crie uma no conta no Colab caso ainda não tenha (dá para usar a do seu gmail)
-- Utilize a opção Upload e suba o arquivo MMdetection_Colab_Drive.ipynb
+- Utilize a opção Upload e suba o arquivo experimento_colab.ipynb
 - Siga as instruções que estão dentro deste arquivo e que vão aparecer no Colab
 
 
