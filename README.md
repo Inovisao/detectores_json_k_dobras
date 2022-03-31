@@ -1,4 +1,4 @@
-# __compara_detectores
+# Detectores_json_k_dobras
 __autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS) 
              1 - Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
              2 - Adaptações feitas por Marcelo Kuchar (marcelokuchar@gmail.com)
