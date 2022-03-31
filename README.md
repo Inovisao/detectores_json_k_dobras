@@ -1,10 +1,11 @@
 # Detectores_json_k_dobras
-__autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS) 
-             1 - Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
-             2 - Adaptações feitas por Marcelo Kuchar (marcelokuchar@gmail.com)
-__versao__: 1.0.1 
+__Autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS) 
 
-Objetivo: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
+1 - Adaptações feitas por Hemerson Pistori (pistori@ucdb.br) e Marcelo Kuchar (marcelokuchar@gmail.com)
+
+__Versao__: 1.0.1 
+
+__Objetivo__: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
 de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Roboflow no formato COCO Json
 
 
