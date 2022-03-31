@@ -93,7 +93,7 @@ https://github.com/open-mmlab/mmdetection/tree/master/configs
 O Inovisão tem um link para vários destes arquivos que são mais usados pelo grupo (consultem o grupo pelo whatsapp)
 
 
-### Rodando o treinamento e os testes
+### Rodando o experimento e gerando gráficos
 # 
 
 $ . ./conda_init.sh
@@ -102,6 +102,9 @@ $ python experimento.py
 
 $ Rscript graficos.R
 
+Ou então
+
+$ roda.sh
 
 ### Encontrando os resultados
 # 
@@ -110,7 +113,7 @@ Gráficos e arquivos .csv:
 - Na pasta dataset são criados 2 gráficos:
   - boxplot.png : boxplot comparando o desempenho das técnicas)
   - history.png : curvas de aprendizagem usando conjunto de validação)
-- Este gráficos são gerados a partir destes dois arquivos:
+- Estes gráficos são gerados a partir destes dois arquivos:
   - results.csv : resultados por técnica, tamanho da caixa e dobra
   - epocas.csv : evolução da perda no conjunto de validação durante o treinamento
 
@@ -119,7 +122,7 @@ Arquivo de LOG:
   histórico da aprendizagem é salvo na primeira dobra na pasta
   correspondente ao primeiro modelo treinado. Exemplo:
   ./dataset/fold_1/MModels/vfnet_r50/20210423_180309.log
-- Também são salvos artigos de log no formato .json  separadamente
+- Também são salvos arquivos de log no formato .json  separadamente
   para cada dobra e rede utilizada. Exemplo:
   dataset/fold_3/MModels/atss_r50/20210424_061001.log.json
  
