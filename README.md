@@ -93,12 +93,15 @@ https://github.com/open-mmlab/mmdetection/tree/master/configs
 O Inovisão tem um link para vários destes arquivos que são mais usados pelo grupo (consultem o grupo pelo whatsapp)
 
 
-### Rodando o experimento e gerando gráficos
-# 
+### Rodando o experimento 
+
 
 $ . ./conda_init.sh
 
 $ python experimento.py
+
+### Gerando os gráficos
+Pode ser necessário instalar alguns pacotes. Neste caso, veja o arquivo  install_R_packages.R
 
 $ Rscript graficos.R
 
