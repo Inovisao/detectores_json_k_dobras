@@ -3,6 +3,7 @@
 #
 # Rscript install_r_packages.R
 
+install.packages("Metrics")
 install.packages("ggplot2")
 install.packages("gridExtra")
 install.packages("plyr")
