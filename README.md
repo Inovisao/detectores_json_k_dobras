@@ -98,8 +98,6 @@ $ python experimento.py
 
 - Pode ser necessário instalar alguns pacotes. Neste caso, veja o arquivo install_R_packages.R
 
-- Se o total de épocas foi alterado em **experimento.py** é preciso alterar TAMBÉM em **graficos.R**
-
 ```
 $ Rscript graficos.R
 ```
