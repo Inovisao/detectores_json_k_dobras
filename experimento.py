@@ -2,21 +2,18 @@
 # Autor: Cedido pelo Prof. Jonathan Andrade Silva (UFMS)
 #        Pequenas adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
 
-
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
 # DEFINE ALGUNS HIPERPARÂMETROS
-#
 
+CLASSES=('eucaliptos',)
 DOBRAS=5
+
 EPOCAS=25
 LIMIAR_CLASSIFICADOR=0.5
 LIMIAR_IOU=0.3
 
-CLASSES=('eucaliptos',)
-#CLASSES=('cheek_forehead','cheek_nose','face','forehead_nose','side_face',)
-# Coloque True se quiser apenas testar redes previamente treinada
 APENAS_TESTA=False
 
 #----------------------------------------------------------------------------

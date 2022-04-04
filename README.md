@@ -23,7 +23,7 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 
 Testado no Ubuntu 20.04 com python 3.7
 
-Leia o arquivo install.sh para ver o que é preciso instalar
+Leia o arquivo **install.sh** para ver o que é preciso instalar
 (a criação do ambiente conda deve ser feito FORA do script de instalação) 
 
 mmdetection 2.12.0 - incluso no git 
@@ -32,82 +32,73 @@ mmdetection 2.12.0 - incluso no git
 Placa gráfica: GTX 3060
 Driver nvidia: 460
 
-Install.sh #instala as dependências.
-
 
 
 ### Preparação dos dados
-# 
-- Use o Roboflow para anotar e coloque tudo como treinamento (não divida em validação e teste)
-- Gere o .zip e coloque na pasta ./dataset/all 
-- Descompacte dentro da pasta all (vai criar uma subpasta chamada train). Se já existe um pasta train, apague o que tem dentro (na versão atual tem um exemplo pronto com imagens de Eucaliptos lá dentro)
-- Rode o utilitário que vai preparar os dados e separar nas dobras 
+ 
+- Use o Roboflow para anotar e coloque tudo como treinamento e gerar um arquivo compactado (.zip) com as imagens e anotações. Não divida em treinamento, validação e teste dentro do roboflow pois isso será feito fora do roboflow, em um esquema de validação cruzada em dobras. No canal do youtube do Prof. Pistori tem um vídeo sobre o Roboflow
 
-$ cd dataset/all/  
+```
+google-chrome https://roboflow.com/
+```
 
-$ unzip exemplo_anotacoes_roboflow.zip
+- Baixe o arquivo gerado no roboflow para a pasta do detectores_json_k_dobras
+- Apague a pasta ./dataset/all/train (se ela existir)
+- Mova para a pasta ./dataset/all o arquivo do roboflow e o descompacte lá
+- Será criada uma pasta train contendo as imagens e as anotações 
+- Comandos que podem ser utilizados para realizar estas operações:
 
-$ cd ../../utils
+```
+mv suas_imagens_roboflow.zip ./dataset/all
+cd ./dataset/all/  
+rm -rf train
+unzip suas_imagens_roboflow.zip
+```
 
-$ ./preparaDadosPelaPrimeiraVez.sh # Não esqueça antes de criar e iniciar seu ambiente CONDA (ler install.sh). Veja primeiro o que tem dentro deste arquivo pois pode não ser necessário rodá-lo.
+- Rode o utilitário que cria as dobras de treino, teste e validação. Altere o número de dobras (-folds) e o percentual de validação (-valperc) se necessário. Os resultados desta etapa ficarão na pasta ./dataset/filesJSON 
 
-- Se necessário, troque o número 4 pela quantidade de dobras que você quiser
-  e o 0.3 pelo percentual que você quiser usar para o conjunto de validação
-  (este percentual é em relação ao que sobra depois que tirar o conjunto de teste)
-  DENTRO DO ARQUIVO preparaDadosPelaPrimeiraVez.sh 
-  procure por "python geraDobras.py -folds=4 -valperc=0.3"
+```
+cd ../../utils
+conda activate detectores # Leia antes o arquivo install.sh para criar o ambiente conda
+./apagaResultados.sh  
+python geraDobras.py -folds=5 -valperc=0.3  # Gera as dobras para a validação cruzada 
+```
 
-- Os arquivos das anotações gerados ficarão na pasta ./dataset/filesJSON
-  (Confira para ver se gerou mesmo)
+- Troque dentro do arquivo experimento.py, nas linhas 10 e 11, o nome da classe que você usou para anotar suas imagens (no lugar de **eucaliptos**) e o número de dobras, caso não tenha utilizado 5
 
-O script preparadaDadosPelaPrimeiraVez.sh chama outros dois script para
-fazer um ajuste relativo a base que usamos para testar (ovos de aedes)
-- Trocar o nome categoria de ovo para Corn # Daria também para trocar
-                                             dentro código Corn por ovo
-- Remove a categoria zero (precisa ter uma única categoria)
+- Na pasta ./utils existem alguns outros script que podem ser úteis em algumas situações. É preciso estudá-los antes de usá-los para bagunçar seus dados.
 
-CUIDADO: Estes ajustes podem não ser necessários para o seu banco de imagens. 
-Neste caso, você pode rodar estes dois comandos aqui separadamente
-
-$ ./apagaResultados.sh  # Apaga arquivos gerados na última execução do treinamento
-
-$ python geraDobras.py -folds=4 -valperc=0.3  # Gera as dobras para a validação cruzada 
 
 
 ### Escolhendo as arquiteturas a serem testadas
 # 
-Procure no arquivo experimento.py o lugar onde criamos a variável 
-MODELS_CONFIG e leia com atenção as orientações. Ajuste também o total
-de épocas e dobras neste arquivo, se necessário. Se alterar o total
-de épocas, arrume também a variável EPOCAS dentro de graficos.R
 
-É preciso também baixar o arquivo .pth no site do mmdetection e colocar dentro da
-pasta ./checkpoints. Os arquivos .pth para rede vfnet, por exemplo, podem ser
-encontrados no link abaixo:
-https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md
-Dentro do site acima procure por um link chamado 'model' (podem ter vários, para as várias versões da rede que você pode escolher)
+Procure no arquivo experimento.py o lugar onde criamos a variável MODELS_CONFIG e leia com atenção as orientações. É preciso baixar os arquivos .pth das redes que serão utilizadas e colocar dentro da pasta ./checkpoints. Estes arquivos estão disponíveis no site do mmdetection e no repositório do Inovisão (acesso restrito). 
+
+Os arquivos .pth para rede vfnet, por exemplo, podem ser encontrados no link:
+https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md . Dentro este site procure por um link chamado 'model' (podem ter vários, para as várias versões da rede que você pode escolher).
 
 Você encontrará as outras redes aqui (tem que baixar todas que for usar):
 https://github.com/open-mmlab/mmdetection/tree/master/configs
 
-O Inovisão tem um link para vários destes arquivos que são mais usados pelo grupo (consultem o grupo pelo whatsapp)
-
 
 ### Rodando o experimento 
 
-
+```
 $ . ./conda_init.sh
-
 $ python experimento.py
+```
 
 ### Gerando os gráficos
-Pode ser necessário instalar alguns pacotes. Neste caso, veja o arquivo  install_R_packages.R
 
+- Pode ser necessário instalar alguns pacotes. Neste caso, veja o arquivo install_R_packages.R
+
+- Se o total de épocas foi alterado em **experimento.py** é preciso alterar TAMBÉM em **graficos.R**
+
+```
 $ Rscript graficos.R
+```
 
-Ou então
-
-$ roda.sh
 
 ### Encontrando os resultados
 # 
