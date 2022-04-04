@@ -3,7 +3,7 @@ __Autores__: Código cedido pelo Prof. Jonathan Andrade Silva (UFMS)
 
 Adaptações feitas por Hemerson Pistori (pistori@ucdb.br) e Marcelo Kuchar (marcelokuchar@gmail.com)
 
-__Versao__: 1.0.1 
+__Versao__: 1.1.0
 
 __Objetivo__: Facilitar a aplicação de validação cruzada em k dobras e gerar resultados da aplicação 
 de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pelo Roboflow no formato COCO Json
@@ -21,22 +21,17 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 
 #### Para rodar na sua própria máquina:
 
-Testado no Ubuntu 20.04 com python 3.7
+- Leia o arquivo **install.sh** para ver o que é preciso instalar
 
-Leia o arquivo **install.sh** para ver o que é preciso instalar
-(a criação do ambiente conda deve ser feito FORA do script de instalação) 
+- Foi testado no Ubuntu 20.04 com python 3.7, Placa gráfica: GTX 3060 e Driver nvidia: 460
 
-mmdetection 2.12.0 - incluso no git 
-(não funciona para versões mais recentes do mmdetection)
-
-Placa gráfica: GTX 3060
-Driver nvidia: 460
+- No git do Inovisão temos o mmdetection 2.12.0 pois estava dando erro com versões mais novas
 
 
 
 ### Preparação dos dados
  
-- Use o Roboflow para anotar e coloque tudo como treinamento e gerar um arquivo compactado (.zip) com as imagens e anotações. Não divida em treinamento, validação e teste dentro do roboflow pois isso será feito fora do roboflow, em um esquema de validação cruzada em dobras. No canal do youtube do Prof. Pistori tem um vídeo sobre o Roboflow
+- Use o Roboflow para anotar e gerar um arquivo compactado (.zip) com as imagens e anotações. Use a opção para deixar tudo junto em um único conjunto de treinamento. No canal do youtube do Prof. Pistori tem um vídeo sobre o Roboflow
 
 ```
 google-chrome https://roboflow.com/
@@ -66,20 +61,30 @@ python geraDobras.py -folds=5 -valperc=0.3  # Gera as dobras para a validação 
 
 - Troque dentro do arquivo experimento.py, nas linhas 10 e 11, o nome da classe que você usou para anotar suas imagens (no lugar de **eucaliptos**) e o número de dobras, caso não tenha utilizado 5
 
-- Na pasta ./utils existem alguns outros script que podem ser úteis em algumas situações. É preciso estudá-los antes de usá-los para bagunçar seus dados.
+- Na pasta ./utils existem alguns outros scripts que podem ser úteis em algumas situações. É preciso estudá-los antes de usá-los para não bagunçar seus dados.
 
 
 
 ### Escolhendo as arquiteturas a serem testadas
 # 
 
-Procure no arquivo experimento.py o lugar onde criamos a variável MODELS_CONFIG e leia com atenção as orientações. É preciso baixar os arquivos .pth das redes que serão utilizadas e colocar dentro da pasta ./checkpoints. Estes arquivos estão disponíveis no site do mmdetection e no repositório do Inovisão (acesso restrito). 
+Procure no arquivo experimento.py o lugar onde criamos a variável **MODELS_CONFIG** e leia com atenção as orientações. É preciso baixar os arquivos .pth das redes que serão utilizadas e colocar dentro da pasta ./checkpoints. Estes arquivos estão disponíveis no site do mmdetection e no repositório do Inovisão (acesso restrito - no link dos bancos de imagens - aba Links da planilhona). 
 
-Os arquivos .pth para rede vfnet, por exemplo, podem ser encontrados no link:
+Os arquivos .pth para a rede vfnet, por exemplo, podem ser encontrados no link:
 https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md . Dentro este site procure por um link chamado 'model' (podem ter vários, para as várias versões da rede que você pode escolher).
 
 Você encontrará as outras redes aqui (tem que baixar todas que for usar):
 https://github.com/open-mmlab/mmdetection/tree/master/configs
+
+Para baixar as redes usadas no exemplo, você pode também rodar os comandos abaixo:
+
+```
+mkdir checkpoints
+cd ./checkpoints
+curl -O https://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_1x_coco/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth
+curl -O https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth
+cd ..
+```
 
 
 ### Rodando o experimento 

@@ -110,23 +110,23 @@ MODELS_CONFIG = {
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
-    'atss':{
-        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
-    },
-    'vfnet': {
-        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
-    },
-    'sabl': {
-        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
-    },
-     
-     'fovea': {
-        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
-    },
+#    'atss':{
+#        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
+#        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+#    },
+#    'vfnet': {
+#        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
+#        'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
+#    },
+#    'sabl': {
+#        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
+#        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
+#    },
+#     
+#     'fovea': {
+#        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
+#        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
+#    },
 }
 
 print('Arquiteturas que serão testadas:')
