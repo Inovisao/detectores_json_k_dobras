@@ -170,6 +170,8 @@ EPOCAS=logTable[1,2]
 # QUE LIMPAR OS RESULTADOS ANTERIORES ANTES DE RODAR O
 # EXPERIMENTO
 logFile <- list.files(".", "log$", recursive=TRUE, full.names=TRUE, include.dirs=TRUE)
+print(logFile)
+print(tail(logFile,1)
 log <- readLines(logFile)
 epocas <-log[grepl('- mmdet - INFO - Epoch\\(',log)]
 epocas <- gsub("[,:\\[]", " ", epocas)
