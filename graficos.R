@@ -171,8 +171,9 @@ EPOCAS=logTable[1,2]
 # EXPERIMENTO
 logFile <- list.files(".", "log$", recursive=TRUE, full.names=TRUE, include.dirs=TRUE)
 print(logFile)
-print(tail(logFile,1)
-log <- readLines(logFile)
+ultimoLog <- tail(logFile,1)
+print(ultimoLog)
+log <- readLines(ultimoLog)
 epocas <-log[grepl('- mmdet - INFO - Epoch\\(',log)]
 epocas <- gsub("[,:\\[]", " ", epocas)
 epocas <- gsub("[]]", " ", epocas)
