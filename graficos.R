@@ -14,6 +14,7 @@ library("dplyr")
 library("ExpDes.pt")
 library(tidyr)
 library("Metrics")
+library(data.table)
 
 
 options(scipen = 999)
@@ -23,125 +24,24 @@ options(scipen = 999)
 #
 dados <- read.table('./dataset/results.csv',sep=',',header=TRUE)
 
-metricas <- list("mAP","mAP50","mAP75","MAE","RMSE","r")
+metricas <- list("mAP50","mAP75","mAP","precision","recall","fscore","MAE","RMSE","r")
 graficos <- list()
 i <- 1
 
+for (metrica in metricas) {
 
-# for (metrica in metricas) {
-#    print(metrica)
-#    TITULO = sprintf("Boxplot for %s",metrica)
-#       print(dados$mAP)
-#       g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP,fill=dados$ml)) + 
-#            geom_boxplot()+
-# #           scale_fill_brewer(palette="Purples")+
-#            labs(title=TITULO,x="ML Technique", y = metrica)+
-#            theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-#    
-#    graficos[[i]] <- g
-#    i = i + 1
-#    print(g)
-# }
-
-TITULO = sprintf("Boxplot for mAP50")
-print(dados$mAP50)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP50,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "mAP50")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for mAP")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "mAP")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for mAP75")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$mAP75,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "mAP75")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for Precision")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$precision,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "Precision")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-
-TITULO = sprintf("Boxplot for Recall")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$recall,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "Recall")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for AR@100")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$AR_100,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "AR")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for MAE")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$MAE,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "MAE")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for RMSE")
-print(dados$mAP)
-g <- ggplot(dados, aes(x=dados$ml, y=dados$RMSE,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "RMSE")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
-TITULO = sprintf("Boxplot for r")
-g <- ggplot(dados, aes(x=dados$ml, y=dados$r,fill=dados$ml)) + 
-  geom_boxplot()+
-  #           scale_fill_brewer(palette="Purples")+
-  labs(title=TITULO,x="ML Technique", y = "r")+
-  theme(legend.position="none",plot.title = element_text(hjust = 0.5))
-
-graficos[[i]] <- g
-i = i + 1
-
+   print(metrica)
+   TITULO = sprintf("Boxplot for %s",metrica)
+   g <- ggplot(dados, aes_string(x="ml", y=metrica,fill="ml")) + 
+   geom_boxplot()+
+   scale_fill_brewer(palette="Purples")+
+   labs(title=TITULO,x="Models", y = metrica)+
+   theme(legend.position="none")+
+   theme(plot.title = element_text(hjust = 0.5))
+   
+   graficos[[i]] <- g
+   i = i + 1
+}
 
 g <- grid.arrange(grobs=graficos, ncol = 3)
 ggsave(paste("./dataset/boxplot.png", sep=""),g, width = 12, height = 10)
@@ -187,11 +87,11 @@ epochs <- 1:EPOCAS
 
 novasColunas <- tidyr::crossing(nets,folds,epochs)
 
-dados <- cbind(novasColunas,epocasVal)
-write.csv(dados,'./dataset/epocas.csv')
+dadosEpocas <- cbind(novasColunas,epocasVal)
+write.csv(dadosEpocas,'./dataset/epocas.csv')
 
 # Pegando apenas dados da primeira dobra 
-filtrado <- dados[dados$folds == "fold_1", ]
+filtrado <- dadosEpocas[dadosEpocas$folds == "fold_1", ]
 TITULO = sprintf("Validation loss evolution during training")
 g <- ggplot(filtrado, aes(x=epochs, y=loss, colour=nets, group=nets)) +
     geom_line() +
@@ -208,7 +108,7 @@ print(g)
 # -------------------------------------------------------------------
 # XY CONTAGEM MANUAL X AUTOMÁTICA
 #
-dados <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
+dadosContagem <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
 
 graficos <- list()
 i <- 1
@@ -216,11 +116,11 @@ i <- 1
 print(nets)
 for (net in nets) {
 
-   filtrado <- dados[dados$ml == net, ]
+   filtrado <- dadosContagem[dados$ml == net, ]
 
    RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
    MAE = mae(filtrado$groundtruth,filtrado$predicted)
-   R = cor(filtrado$groundtruth,filtrado$predicted)
+   R = cor(filtrado$groundtruth,filtrado$predicted,method = "pearson")
    TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
 
    g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
@@ -252,18 +152,50 @@ g <- ggplot(filtrado, aes(x=groundtruth))+
 ggsave(paste("./dataset/histogram.png", sep=""),g)
 print(g)
 
-#dados <- read.table('../results_dl/resultados.csv',sep=',',header=TRUE)
-#
-#sink('../results_dl/two_way.txt')
-#
-#cat(sprintf('\n\n====>>> TESTANDO: PRECISÃO =============== \n\n',metrica))
-#fat2.dic(dados$architecture, dados$optimizer, dados$precision, quali = c(TRUE,TRUE), mcomp="sk") 
-#cat(sprintf('\n\n====>>> TESTANDO: RECALL ================= \n\n',metrica))
-#fat2.dic(dados$architecture, dados$optimizer, dados$recall, quali = c(TRUE,TRUE), mcomp="sk") 
-#cat(sprintf('\n\n====>>> TESTANDO: FSCORE ================= \n\n',metrica))
-#fat2.dic(dados$architecture, dados$optimizer, dados$fscore, quali = c(TRUE,TRUE), mcomp="sk") 
 
-#sink()
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# GERA ESTATÍSTICAS PARA mAP, fscore e R
+# Formatado para tabela em Latex
 
 
+sink('./dataset/statistics.txt')
 
+dt <- data.table(dados)
+cat("\n[ Estatísticas para mAP]-----------------------------\n")
+dt[,list(median=median(mAP),IQR=IQR(mAP),mean=mean(mAP),sd=sd(mAP)),by=ml]
+cat("\n[ Estatísticas para fscore]-----------------------------\n")
+dt[,list(median=median(fscore),IQR=IQR(fscore),mean=mean(fscore),sd=sd(fscore)),by=ml]
+cat("\n[ Estatísticas para r]-----------------------------\n")
+dt[,list(median=median(r),IQR=IQR(r),mean=mean(r),sd=sd(r)),by=ml]
+
+sink()
+
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# APLICA TESTES DE HIPÓTESE E PÓS-TESTE
+# Anova e Tukey para mAP, fscore e r
+
+
+sink('./dataset/anova.txt')
+
+cat("[ Teste para mAP]-----------------------------","\n")
+dados.anova <- aov(dados$mAP ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+cat("[ Teste para fscore]-----------------------------","\n")
+dados.anova <- aov(dados$fscore ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+cat("[ Teste para r]-----------------------------","\n")
+dados.anova <- aov(dados$r ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+sink()

@@ -9,13 +9,12 @@
 
 CLASSES=('eucaliptos',)
 DOBRAS=5
-
-EPOCAS=25
+EPOCAS=15
 LIMIAR_CLASSIFICADOR=0.5
 LIMIAR_IOU=0.3
 
 APENAS_TESTA=False
-
+SALVAR_IMAGENS=True
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
@@ -102,17 +101,17 @@ TAXA_APRENDIZAGEM=[0.05,0.01,0.05,0.01,0.05,0.05]
 
 
 MODELS_CONFIG = {
-    'retinanet':{
-        'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
-        'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
-    },
     'faster':{
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
+    'retinanet':{
+        'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
+        'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
+    },
 #    'atss':{
 #        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+#        'checkpoint' : pasta_checkpoints+'/#atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
 #    },
 #    'vfnet': {
 #        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
@@ -407,7 +406,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   all_GT=0
   for i,dt in enumerate(coco_dataset.data_infos):
 
-    print('Arquivo de imagens:',dt['file_name'])
+    print('Processando Imagem de Teste:',dt['file_name'])
 
     imagex=None
     imagex=mmcv.imread(os.path.join(coco_dataset.img_prefix,dt['file_name']))
@@ -477,11 +476,11 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     imagex=cv2.putText(imagex, str(objetos_medidos),(5,30), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('blue'), 1)
     imagex=cv2.putText(imagex, str(objetos_preditos),(5,60), cv2.FONT_HERSHEY_TRIPLEX, 1, color_val('green'), 1)
     try:
-        precision = round(cont_TP/(cont_TP+cont_FP),2)
+        precision = round(cont_TP/(cont_TP+cont_FP),3)
     except ZeroDivisionError:
         precision = 0
     try:
-        recall = round(cont_TP/len(bboxes),2)
+        recall = round(cont_TP/len(bboxes),3)
     except ZeroDivisionError:
         recall = 0
 
@@ -496,8 +495,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
       if not os.path.exists(save_path):
         os.makedirs(save_path)
       img_path = os.path.join(save_path ,dt['file_name'])
-      print('Salvando Imagens com Resultados Em:',img_path)
-      print("Salvou?: ",cv2.imwrite(img_path,imagex))
+      cv2.imwrite(img_path,imagex)
 
 
 
@@ -523,24 +521,34 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     mAP=eval_results['bbox_mAP']
     mAP50=eval_results['bbox_mAP_50']
     mAP75=eval_results['bbox_mAP_75']
+  except:
+    mAP=0
+    mAP50=0
+    mAP75=0
+  try:  
     MAE=mean_absolute_error(medidos,preditos)
     RMSE=math.sqrt(mean_squared_error(medidos,preditos))
-    try:
-      r=np.corrcoef(medidos,preditos)[0,1]
-    except ZeroDivisionError:
-      r = 0
-    try:
-      precision_fold = round(all_TP/(all_TP+all_FP),2)
-    except ZeroDivisionError:
-      precision_fold = 0
-    try:
-      recall_fold = round(all_TP/all_GT,2)
-    except ZeroDivisionError:
-      recall_fold = 0
-    
-    string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)+','+str(precision_fold)+','+str(recall_fold)+','+str(eval_results2['AR@100'])
   except:
-    print('ERRO ... DEU PROBLEMA NA HORA DE CALCULAR ALGUMA MÉTRICA')
+    MAE=0
+    RMSE=0    
+  try:
+    r=np.corrcoef(medidos,preditos)[0,1]
+  except ZeroDivisionError:
+    r = 0
+  try:
+    precision_fold = round(all_TP/(all_TP+all_FP),3)
+  except ZeroDivisionError:
+    precision_fold = 0
+  try:
+    recall_fold = round(all_TP/all_GT,3)
+  except ZeroDivisionError:
+    recall_fold = 0
+  try: 
+    fscore=round((2*precision_fold*recall_fold)/(precision_fold+recall_fold),3)
+  except ZeroDivisionError:
+    fscore=0
+    
+  string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)+','+str(precision_fold)+','+str(recall_fold)+','+str(fscore)
 
   return string_results
   
@@ -585,7 +593,7 @@ print('======================================================')
 
 printToFile('ml,fold,groundtruth,predicted,TP,FP','dataset/counting.csv','w')
 
-printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,AR_100','dataset/results.csv','w')
+printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 i=1
 for selected_model in REDES:
     for f in np.arange(1,DOBRAS+1):
@@ -598,7 +606,7 @@ for selected_model in REDES:
 
       pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
       print('Usando o modelo aprendido: ',pth)
-      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=True,num_model=i,fold=fold)
+      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
       printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
     i=i+1
   

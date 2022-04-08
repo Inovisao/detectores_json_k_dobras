@@ -113,6 +113,8 @@ Gráficos e arquivos .csv:
 - Estes gráficos são gerados a partir destes dois arquivos:
   - results.csv : resultados por técnica, tamanho da caixa e dobra
   - epocas.csv : evolução da perda no conjunto de validação durante o treinamento
+  - statistics.txt : várias estatísticas por modelo
+  - anova.txt : resultado de um teste ANOVA seguido por Tukey
 
 Arquivo de LOG:
 - Um único arquivo de log com informações sobre todas as redes e o
