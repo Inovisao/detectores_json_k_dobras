@@ -167,7 +167,7 @@ dt[,list(median=median(mAP),IQR=IQR(mAP),mean=mean(mAP),sd=sd(mAP)),by=ml]
 cat("\n[ Estatísticas para fscore]-----------------------------\n")
 dt[,list(median=median(fscore),IQR=IQR(fscore),mean=mean(fscore),sd=sd(fscore)),by=ml]
 cat("\n[ Estatísticas para r]-----------------------------\n")
-dt[,list(median=median(r),IQR=IQR(r),mean=mean(r),sd=sd(r)),by=ml]
+try(dt[,list(median=median(r),IQR=IQR(r),mean=mean(r),sd=sd(r)),by=ml])
 
 sink()
 
