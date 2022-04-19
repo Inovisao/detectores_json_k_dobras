@@ -2,7 +2,7 @@
 # Disponível aqui: https://github.com/akarazniewicz/cocosplit
 #
 # O número de folds padrão é 5 
-# O percentual a ser usado para validação é 0.6 (60%)
+# O percentual a ser usado para validação é 0.3 (30%)
 # Os arquivos .json resultantes são salvos na pasta ../dataset/filesJSON
 #
 # Para mudar estes valores basta passar valores diferentes como parâmetros
@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser(description='Divide o conjunto de anotações p
 parser.add_argument('-annotations', default='../dataset/all/train/_annotations.coco.json',metavar='coco_annotations', type=str,
                     help='Caminho para o arquivo com as anotações',required=False)
 parser.add_argument('-json', default='../dataset/filesJSON/',type=str, help='Pasta para os arquivos resultantes',required=False)
-parser.add_argument('-folds', default='4',dest='folds', type=int,
+parser.add_argument('-folds', default='5',dest='folds', type=int,
                     help="Número de dobras a ser usado",required=False)
 parser.add_argument('-valperc', default='0.3',dest='valperc', type=float,
                     help="Percentual a ser usado para validação durante o treinamento",required=False)
