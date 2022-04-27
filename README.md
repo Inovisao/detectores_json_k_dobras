@@ -13,10 +13,11 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 
 #### Para rodar no Google Colab 
 
+- Faça download e descompacte ou clone (se souber usar o git) este projeto na sua máquina
 - Entre no site https://colab.research.google.com/
 - Crie uma conta no Colab caso ainda não tenha (dá para usar a do seu gmail)
-- Utilize a opção Upload e suba o arquivo experimento_colab.ipynb
-- Siga as instruções que estão dentro deste arquivo e que vão aparecer no Colab
+- Utilize a opção Upload e suba o arquivo notebook jupyter chamado **experimento_colab.ipynb** que estará na pasta chamada compara_classificadores_tf2 depois que você clonar o projeto. Se fizer por download, terá que trocar o nome da pasta de compara_classificadores_tf2_master para compara_classificadores_tf2.
+- Siga as instruções que estão em **experimento_colab.ipynb** depois de subí-lo no Colab
 
 
 #### Para rodar na sua própria máquina:
