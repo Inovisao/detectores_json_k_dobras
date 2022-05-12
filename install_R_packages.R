@@ -17,6 +17,7 @@ install.packages("ExpDes.pt")
 install.packages("psych.pt")
 install.packages("ie2misc")
 install.packages("reshape")
+install.packages("tidyr")
 
 
 
