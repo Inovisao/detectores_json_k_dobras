@@ -45,18 +45,12 @@ for categoria in categorias:
        w = anotacao['bbox'][2]
        h = anotacao['bbox'][3]
 
-       print('anotacao = ')
-       print(anotacao)
        img_id = anotacao['image_id']
        img_coco = anotacoes.loadImgs(ids=img_id)
-       print(img_coco)
        
        caminho_imagem=args.images+'/'+img_coco[0]['file_name']
-       print('Abrindo imagem ',caminho_imagem)
        
        imagem = Image.open(caminho_imagem) 
-       print('Imagem tamanho = ',imagem.size)
-       print('x = ',x,' y = ',y,' w = ',w,' h = ',h)
        retangulo=imagem.crop((x, y, x+w, y+h))
 
 
