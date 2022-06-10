@@ -111,7 +111,7 @@ MODELS_CONFIG = {
     },
 #    'atss':{
 #        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/#atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+#        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
 #    },
 #    'vfnet': {
 #        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
