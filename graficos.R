@@ -161,11 +161,26 @@ print(g)
 
 sink('./dataset/statistics.txt')
 
+
+metricas <- list("mAP50","mAP75","mAP","precision","recall","fscore","MAE","RMSE","r")
+
 dt <- data.table(dados)
+cat("\n[ Estatísticas para mAP50]-----------------------------\n")
+dt[,list(median=median(mAP50),IQR=IQR(mAP50),mean=mean(mAP50),sd=sd(mAP50)),by=ml]
+cat("\n[ Estatísticas para mAP75]-----------------------------\n")
+dt[,list(median=median(mAP75),IQR=IQR(mAP75),mean=mean(mAP75),sd=sd(mAP75)),by=ml]
 cat("\n[ Estatísticas para mAP]-----------------------------\n")
 dt[,list(median=median(mAP),IQR=IQR(mAP),mean=mean(mAP),sd=sd(mAP)),by=ml]
+cat("\n[ Estatísticas para precision]-----------------------------\n")
+dt[,list(median=median(precision),IQR=IQR(precision),mean=mean(precision),sd=sd(precision)),by=ml]
+cat("\n[ Estatísticas para recall]-----------------------------\n")
+dt[,list(median=median(recall),IQR=IQR(recall),mean=mean(recall),sd=sd(recall)),by=ml]
 cat("\n[ Estatísticas para fscore]-----------------------------\n")
 dt[,list(median=median(fscore),IQR=IQR(fscore),mean=mean(fscore),sd=sd(fscore)),by=ml]
+cat("\n[ Estatísticas para MAE]-----------------------------\n")
+dt[,list(median=median(MAE),IQR=IQR(MAE),mean=mean(MAE),sd=sd(MAE)),by=ml]
+cat("\n[ Estatísticas para RMSE]-----------------------------\n")
+dt[,list(median=median(RMSE),IQR=IQR(RMSE),mean=mean(RMSE),sd=sd(RMSE)),by=ml]
 cat("\n[ Estatísticas para r]-----------------------------\n")
 try(dt[,list(median=median(r),IQR=IQR(r),mean=mean(r),sd=sd(r)),by=ml])
 
@@ -180,17 +195,57 @@ sink()
 
 sink('./dataset/anova.txt')
 
+cat("[ Teste para mAP50]-----------------------------","\n")
+dados.anova <- aov(dados$mAP50 ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+cat("[ Teste para mAP75]-----------------------------","\n")
+dados.anova <- aov(dados$mAP75 ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+
+
 cat("[ Teste para mAP]-----------------------------","\n")
 dados.anova <- aov(dados$mAP ~ dados$ml)
 summary(dados.anova)
 tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
 tukey
 
+cat("[ Teste para precision]-----------------------------","\n")
+dados.anova <- aov(dados$precision ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+cat("[ Teste para recall]-----------------------------","\n")
+dados.anova <- aov(dados$recall ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+
 cat("[ Teste para fscore]-----------------------------","\n")
 dados.anova <- aov(dados$fscore ~ dados$ml)
 summary(dados.anova)
 tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
 tukey
+
+cat("[ Teste para MAE]-----------------------------","\n")
+dados.anova <- aov(dados$MAE ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
+cat("[ Teste para RMSE]-----------------------------","\n")
+dados.anova <- aov(dados$RMSE ~ dados$ml)
+summary(dados.anova)
+tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
+tukey
+
 
 cat("[ Teste para r]-----------------------------","\n")
 dados.anova <- aov(dados$r ~ dados$ml)
