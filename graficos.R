@@ -91,7 +91,10 @@ dadosEpocas <- cbind(novasColunas,epocasVal)
 write.csv(dadosEpocas,'./dataset/epocas.csv')
 
 # Pegando apenas dados da primeira dobra 
-filtrado <- dadosEpocas[dadosEpocas$folds == "fold_1", ]
+filtrado <- dadosEpocas[dadosEpocas$folds == "fold_1",]
+filtrado <- filtrado[filtrado$nets != "NA", ]
+filtrado$loss[filtrado$loss > 5] <- 5
+print(filtrado)
 TITULO = sprintf("Validation loss evolution during training")
 g <- ggplot(filtrado, aes(x=epochs, y=loss, colour=nets, group=nets)) +
     geom_line() +
@@ -122,11 +125,14 @@ for (net in nets) {
    MAE = mae(filtrado$groundtruth,filtrado$predicted)
    R = cor(filtrado$groundtruth,filtrado$predicted,method = "pearson")
    TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
-
+   MAX <- max(filtrado$groundtruth, filtrado$predicted)
+   
    g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
         geom_point()+
         geom_smooth(method='lm')+
-        labs(title=TITULO ,x="Measured", y = "Predicted")+ theme(plot.title = element_text(size = 10))
+        labs(title=TITULO ,x="Measured", y = "Predicted")+ theme(plot.title = element_text(size = 10))+
+        xlim(0,MAX)+
+        ylim(0,MAX)
 
    print(g)
    graficos[[i]] <- g
