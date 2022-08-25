@@ -15,6 +15,7 @@ LIMIAR_IOU=0.3
 
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
+
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
@@ -127,6 +128,7 @@ MODELS_CONFIG = {
 #        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
 #    },
 }
+
 
 print('Arquiteturas que serão testadas:')
 print(MODELS_CONFIG)
@@ -324,11 +326,11 @@ def get_iou(bb1, bb2):
     Parameters
     ----------
     bb1 : dict
-        Keys: {'x1', 'x2', 'y1', 'y2'}
+        Keys: {'x1', 'x2', 'y1', 'y2', 'score_thr'}
         The (x1, y1) position is at the top left corner,
         the (x2, y2) position is at the bottom right corner
     bb2 : dict
-        Keys: {'x1', 'x2', 'y1', 'y2'}
+        Keys: {'x1', 'x2', 'y1', 'y2', 'score_thr'}
         The (x, y) position is at the top left corner,
         the (x2, y2) position is at the bottom right corner
 
@@ -339,10 +341,8 @@ def get_iou(bb1, bb2):
     """
     # print(bb1)
     # print(bb2)
-    assert bb1['x1'] < bb1['x2']
-    assert bb1['y1'] < bb1['y2']
-    assert bb2['x1'] < bb2['x2']
-    assert bb2['y1'] < bb2['y2']
+    if bb1['x1'] >= bb1['x2'] or bb1['y1'] >= bb1['y2'] or bb2['x1'] >= bb2['x2'] or bb2['y1'] >= bb2['y2']:
+        return 0.0
 
     # determine the coordinates of the intersection rectangle
     x_left = max(bb1['x1'], bb2['x1'])
@@ -369,6 +369,34 @@ def get_iou(bb1, bb2):
     assert iou <= 1.0
 #   print("iou:",str(iou))
     return iou
+
+def is_max_score_thr(bb1, pred_array):
+  """
+    Compares if given bounding box is the one with the highest score_thr inside the array of predicted bounding boxes.
+
+    Parameters
+    ----------
+    bb1 : dict
+        Keys: {'x1', 'x2', 'y1', 'y2', 'score_thr'}
+        The (x1, y1) position is at the top left corner,
+        the (x2, y2) position is at the bottom right corner
+    pred_array : array of predicted objects
+        Keys of dicts: {'x1', 'x2', 'y1', 'y2', 'score_thr'}
+        The (x, y) position is at the top left corner,
+        the (x2, y2) position is at the bottom right corner
+
+    Returns
+    -------
+    boolean
+  """
+  is_max = True
+  for cls in pred_array:
+    for bb2 in cls:
+      bbd={'x1':int(bb2[0]),'x2':int(bb2[2]),'y1':int(bb2[1]),'y2':int(bb2[3])}
+      if is_max and bb2[4] > bb1['score_thr'] and get_iou(bb1,bbd) > LIMIAR_IOU:
+        is_max = False
+  return is_max
+
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -416,6 +444,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
     #GT BBOXS VERMELHOS  GroundTruth  
     ann = coco_dataset.get_ann_info(i)
+    labels = ann['labels']
     bboxes = np.insert(ann['bboxes'],4,0.91,axis=1)
 
     #vis.imshow_gt_det_bboxes(imagex,dict(gt_bboxes=bboxes, gt_labels=np.repeat(1, len(bboxes))), resultx,det_bbox_color=(0,100,0), show=True,score_thr=0.5)
@@ -424,11 +453,17 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     for j in range(min(MAX_BOX, bboxes.shape[0])): 
       left_top = (int(bboxes[j, 0]), int(bboxes[j, 1]))
       right_bottom = (int(bboxes[j, 2]), int(bboxes[j, 3]))
-      ground_thruth.append({'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]})
+      ground_thruth.append({'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1],'class':labels[j]})
       imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('blue'), thickness=1)
     
     #RESULTADOS BBOXS VERDES Prediction
-    bboxes2 = resultx[0]
+    bboxes2 = []
+    for j in range(len(resultx)):
+      for bb in resultx[j]:
+        obj = {'x1':int(bb[0]),'x2':int(bb[2]),'y1':int(bb[1]),'y2':int(bb[3]),'score_thr':bb[4],'class':j}
+        if is_max_score_thr(obj,resultx):
+          bboxes2.append(obj)
+    bboxes2 = np.array(bboxes2)
     # print(bboxes2)
     # print("detections: " + str(len(bboxes2)))
     # print("ground truths: " + str(len(bboxes)))
@@ -443,22 +478,27 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     cont_TP=0
     cont_FP=0
     for j in range(min(MAX_BOX, bboxes2.shape[0])): 
-      if bboxes2[j,4] >= LIMIAR_CLASSIFICADOR: #score_thr  ou seja, a confiança
+      if bboxes2[j]['score_thr'] >= LIMIAR_CLASSIFICADOR: #score_thr  ou seja, a confiança
         objetos_preditos=objetos_preditos+1  # Total de objetos preditos automaticamente (usando IoU > 0.5)
-        left_top = (int(bboxes2[j, 0]), int(bboxes2[j, 1]))
-        right_bottom = (int(bboxes2[j, 2]), int(bboxes2[j, 3])) 
+        left_top = (bboxes2[j]['x1'],bboxes2[j]['y1'])
+        left_top_text = (bboxes2[j]['x1'],bboxes2[j]['y1']-10)
+        right_bottom = (bboxes2[j]['x2'],bboxes2[j]['y2'])
         TP = False
         for box in ground_thruth:          
-          if get_iou (box,{'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1]}) > LIMIAR_IOU: # IOU > 0.3
-            imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1)    
-            TP = True          
+          if get_iou(box,bboxes2[j]) > LIMIAR_IOU: # IOU > 0.3
+            if(bboxes2[j]['class'] == box['class']):
+              TP = True
 
         if TP == True:
           cont_TP+=1
+          imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1) 
+          cv2.putText(imagex, CLASSES[bboxes2[j]['class']], left_top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_val('green'), thickness=2) 
+
         else:
           cont_FP+=1
-          imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=2)    
-        
+          imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=1)    
+          cv2.putText(imagex, CLASSES[bboxes2[j]['class']], left_top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_val('red'), thickness=2)
+
 #    print("TP:"+ str(cont_TP))
     all_TP+=cont_TP    
 #    print("FP:"+ str(cont_FP)) 
