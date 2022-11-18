@@ -89,7 +89,7 @@ plt.rcParams["axes.grid"] = False
 # mais linhas copiando das que já existem e alterando o config_file e o checkpoint.
 #
 # É preciso também baixar o arquivo .pth no site do mmdetection e colocar dentro da
-# pasta mmdetection/checkpoints. Os arquivos .pth para rede vfnet, por exemplo, podem ser
+# pasta ./checkpoints. Os arquivos .pth para rede vfnet, por exemplo, podem ser
 # encontrados no link abaixo:
 # https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md
 #
