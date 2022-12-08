@@ -18,6 +18,7 @@ library(data.table)
 
 
 options(scipen = 999)
+
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
 # BOXPLOT DO DESEMPENHO ENTRE TÉCNICAS
@@ -66,11 +67,10 @@ logTable <- read.table(text = log,sep='=')
 EPOCAS=logTable[1,2]
 
 # GAMBIARRA PARA ENCONTRAR E PEGAR DADOS DO ARQUIVO DE LOG
-# SE TIVER MAIS DE UM ARQUIVO .log DÁ ERROR POR ISSO TEM
-# QUE LIMPAR OS RESULTADOS ANTERIORES ANTES DE RODAR O
-# EXPERIMENTO
+
 logFile <- list.files(".", "log$", recursive=TRUE, full.names=TRUE, include.dirs=TRUE)
-ultimoLog <- tail(logFile,1)
+tail(file.info(logFile)$ctime) #mostrando a data de modificação deles
+ultimoLog <- logFile[length(logFile)] #extraindo o ultimo elemento(ultima posição do vetor)
 log <- readLines(ultimoLog)
 epocas <-log[grepl('- mmdet - INFO - Epoch\\(',log)]
 epocas <- gsub("[,:\\[]", " ", epocas)
