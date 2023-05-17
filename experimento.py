@@ -237,6 +237,10 @@ def setCFG(selected_model,
   # We can initialize the logger for training and have a look
   # at the final config used for training
   #print(f'Config:\n{cfg.pretty_text}')
+  
+
+  cfg.device = "cuda" if torch.cuda.is_available() else "cpu"
+  
   return cfg
 
 #----------------------------------------------------------------------------
