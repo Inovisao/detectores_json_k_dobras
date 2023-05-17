@@ -16,24 +16,6 @@
 # mesmo tendo um driver para o 11.2, o ubuntu instalou o cuda 10.1
 # e ai dava erro na hora de instalar o mmcv-full
 
-# Configuração adotada em 22/03/2022 -> por Junior
-# Os passos seguidos:
-# -----------------------------------------------------------------------------------------------
-# conda create --name detectores python=3.6 -y
-# conda activate detectores
-# pip install -U torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
-# pip install mmcv-full==1.3.3
-# git clone https://github.com/open-mmlab/mmdetection.git
-# cd mmdetection
-# pip install -r requirements/build.txt
-# pip install -v -e .  
-# cd ..
-# pip install dicttoxml albumentations terminaltables imagecorruptions funcy sklearn
-#-------------------------------------------------------------------------------------------------
-
-# Para remover o am
-
-
 conda install cudatoolkit=11.3 pytorch torchvision -c pytorch
 
 # CASO NÃO TENHA GPU, tente o comando abaixo (ou procure
@@ -71,3 +53,19 @@ pip install dicttoxml albumentations terminaltables imagecorruptions funcy sklea
 # Para remover o ambiente e começar tudo de novo
 # conda deactivate
 # conda remove --name detectores --all
+
+# OUTRA SUGESTÃO DIFERENTE PARA INSTALAÇÃO DOS PACOTES
+# Testada 22/03/2022 por Junior Souza (junior.souza@ifms.edu.br)
+# -----------------------------------------------------------------------------------------------
+# conda create --name detectores python=3.6 -y
+# conda activate detectores
+# pip install -U torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+# pip install mmcv-full==1.3.3
+# git clone https://github.com/open-mmlab/mmdetection.git
+# cd mmdetection
+# pip install -r requirements/build.txt
+# pip install -v -e .  
+# cd ..
+# pip install dicttoxml albumentations terminaltables imagecorruptions funcy sklearn
+#-------------------------------------------------------------------------------------------------
+
