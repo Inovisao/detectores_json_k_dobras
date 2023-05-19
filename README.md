@@ -32,7 +32,7 @@ de diversos detectores do pacote mmdetection em uma banco de imagens anotadas pe
 
 ### Preparação dos dados
  
-- Use o Roboflow para anotar e gerar um arquivo compactado (.zip) com as imagens e anotações. Use a opção para deixar tudo junto em um único conjunto de treinamento. No canal do youtube do Prof. Pistori tem um vídeo sobre o Roboflow
+- Use o Roboflow para anotar e gerar um arquivo compactado (.zip) com as imagens e anotações. Use a opção para deixar tudo junto em um único conjunto de treinamento e no formato COCO. Será gerado um arquivo chamado _annotations.coco.json. No canal do youtube do Prof. Pistori tem um vídeo sobre o Roboflow
 
 ```
 google-chrome https://roboflow.com/
