@@ -60,27 +60,27 @@ contaDobras <- dados[dados$ml == nets[1], ]
 
 DOBRAS=nrow(contaDobras)
 
-# GAMBIARRA PARA PEGAR O TOTAL DE ÉPOCAS DE DENTRO DE experimento.py 
+# ALERTA DE GAMBIARRA 
+# Pega o total de épocas de dentro do arquivo experimento.py 
 log <- readLines('experimento.py')
 log <-log[grepl('EPOCAS=',log)]
 logTable <- read.table(text = log,sep='=')
 EPOCAS=logTable[1,2]
 
-# GAMBIARRA PARA ENCONTRAR E PEGAR DADOS DO ARQUIVO DE LOG
+# ALERTA DE GAMBIARRA
+# Pega dentro do arquivo de LOG os valores de perda no conjunto
+# de validação (loss_val) para cada época da primeira dobra
 
 logFile <- list.files(".", "log$", recursive=TRUE, full.names=TRUE, include.dirs=TRUE)
 tail(file.info(logFile)$ctime) #mostrando a data de modificação deles
 ultimoLog <- logFile[length(logFile)] #extraindo o ultimo elemento(ultima posição do vetor)
 log <- readLines(ultimoLog)
 epocas <-log[grepl('- mmdet - INFO - Epoch\\(',log)]
-epocas <- gsub("[,:\\[]", " ", epocas)
-epocas <- gsub("[]]", " ", epocas)
-epocas <- gsub("loss ", ",", epocas)
+epocas <- gsub(".*loss_val: ([0-9.]+).*", "\\1", epocas)
 
-epocasVal <- read.table(text = epocas,sep=',')
+epocasVal <- read.table(text = epocas,sep=' ')
 
-#epocasVal <- epocasVal[ , c("V2")]
-colnames(epocasVal) <- c("rest","loss")
+colnames(epocasVal) <- c("loss")
 
 folds <- sprintf("fold_%d",seq(1:DOBRAS))
 epochs <- 1:EPOCAS
@@ -93,8 +93,10 @@ write.csv(dadosEpocas,'./dataset/epocas.csv')
 # Pegando apenas dados da primeira dobra 
 filtrado <- dadosEpocas[dadosEpocas$folds == "fold_1",]
 filtrado <- filtrado[filtrado$nets != "NA", ]
+# Para evitar que valores muito grandes de perda na validação deixem
+# o gráfico difícil de ver, os valores maiores que 5 são transformados
+# em 5
 filtrado$loss[filtrado$loss > 5] <- 5
-print(filtrado)
 TITULO = sprintf("Validation loss evolution during training")
 g <- ggplot(filtrado, aes(x=epochs, y=loss, colour=nets, group=nets)) +
     geom_line() +
