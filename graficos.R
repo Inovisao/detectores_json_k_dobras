@@ -164,7 +164,7 @@ for (net in nets) {
   RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
   MAE = mae(filtrado$groundtruth,filtrado$predicted)
   R = cor(filtrado$groundtruth,filtrado$predicted,method = "pearson")
-  TITULO = sprintf("%s (Fold 1) RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
+  TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
   MAX <- max(filtrado$groundtruth, filtrado$predicted)
   
   g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
