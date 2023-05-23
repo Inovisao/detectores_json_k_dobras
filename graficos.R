@@ -111,7 +111,7 @@ print(g)
 
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
-# XY CONTAGEM MANUAL X AUTOMÁTICA
+# XY CONTAGEM MANUAL X AUTOMÁTICA - JUNTANDO TODAS AS DOBRAS
 #
 dadosContagem <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
 
@@ -121,7 +121,7 @@ i <- 1
 print(nets)
 for (net in nets) {
 
-   filtrado <- dadosContagem[dados$ml == net, ]
+   filtrado <- dadosContagem[dadosContagem$ml == net, ]
 
    RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
    MAE = mae(filtrado$groundtruth,filtrado$predicted)
@@ -143,6 +143,44 @@ for (net in nets) {
 
 g <- grid.arrange(grobs=graficos, ncol = 2)
 ggsave(paste("./dataset/counting.png", sep=""),g, width = 8, height = 8)
+print(g)
+
+
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# XY CONTAGEM MANUAL X AUTOMÁTICA - APENAS PARA A PRIMEIRA DOBRA
+#
+dadosContagem <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
+
+graficos <- list()
+i <- 1
+
+dadosContagem <- subset(dadosContagem,fold == 'fold_1')
+print(nets)
+for (net in nets) {
+  
+  filtrado <- dadosContagem[dadosContagem$ml == net, ]
+  
+  RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
+  MAE = mae(filtrado$groundtruth,filtrado$predicted)
+  R = cor(filtrado$groundtruth,filtrado$predicted,method = "pearson")
+  TITULO = sprintf("%s (Fold 1) RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
+  MAX <- max(filtrado$groundtruth, filtrado$predicted)
+  
+  g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
+    geom_point()+
+    geom_smooth(method='lm')+
+    labs(title=TITULO ,x="Measured", y = "Predicted")+ theme(plot.title = element_text(size = 10))+
+    xlim(0,MAX)+
+    ylim(0,MAX)
+  
+  print(g)
+  graficos[[i]] <- g
+  i = i + 1
+}
+
+g <- grid.arrange(grobs=graficos, ncol = 2)
+ggsave(paste("./dataset/counting_FOLD_1.png", sep=""),g, width = 8, height = 8)
 print(g)
 
 
