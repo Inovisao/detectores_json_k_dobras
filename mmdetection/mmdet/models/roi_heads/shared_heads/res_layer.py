@@ -1,14 +1,15 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
 import torch.nn as nn
-from mmcv.runner import BaseModule, auto_fp16
+from mmengine.model import BaseModule
 
 from mmdet.models.backbones import ResNet
-from mmdet.models.builder import SHARED_HEADS
-from mmdet.models.utils import ResLayer as _ResLayer
+from mmdet.models.layers import ResLayer as _ResLayer
+from mmdet.registry import MODELS
 
 
-@SHARED_HEADS.register_module()
+@MODELS.register_module()
 class ResLayer(BaseModule):
 
     def __init__(self,
@@ -48,7 +49,7 @@ class ResLayer(BaseModule):
         self.add_module(f'layer{stage + 1}', res_layer)
 
         assert not (init_cfg and pretrained), \
-            'init_cfg and pretrained cannot be setting at the same time'
+            'init_cfg and pretrained cannot be specified at the same time'
         if isinstance(pretrained, str):
             warnings.warn('DeprecationWarning: pretrained is a deprecated, '
                           'please use "init_cfg" instead')
@@ -65,7 +66,6 @@ class ResLayer(BaseModule):
         else:
             raise TypeError('pretrained must be a str or None')
 
-    @auto_fp16()
     def forward(self, x):
         res_layer = getattr(self, f'layer{self.stage + 1}')
         out = res_layer(x)

@@ -1,4 +1,12 @@
-from .distributed_sampler import DistributedSampler
-from .group_sampler import DistributedGroupSampler, GroupSampler
+# Copyright (c) OpenMMLab. All rights reserved.
+from .batch_sampler import (AspectRatioBatchSampler,
+                            TrackAspectRatioBatchSampler)
+from .class_aware_sampler import ClassAwareSampler
+from .multi_source_sampler import GroupMultiSourceSampler, MultiSourceSampler
+from .track_img_sampler import TrackImgSampler
 
-__all__ = ['DistributedSampler', 'DistributedGroupSampler', 'GroupSampler']
+__all__ = [
+    'ClassAwareSampler', 'AspectRatioBatchSampler', 'MultiSourceSampler',
+    'GroupMultiSourceSampler', 'TrackImgSampler',
+    'TrackAspectRatioBatchSampler'
+]

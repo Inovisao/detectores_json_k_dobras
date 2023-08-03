@@ -1,13 +1,14 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 # Copyright (c) 2019 Western Digital Corporation or its affiliates.
 
 import warnings
 
 import torch.nn as nn
 from mmcv.cnn import ConvModule
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from ..builder import BACKBONES
+from mmdet.registry import MODELS
 
 
 class ResBlock(BaseModule):
@@ -55,7 +56,7 @@ class ResBlock(BaseModule):
         return out
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class Darknet(BaseModule):
     """Darknet backbone.
 
@@ -132,9 +133,9 @@ class Darknet(BaseModule):
         self.norm_eval = norm_eval
 
         assert not (init_cfg and pretrained), \
-            'init_cfg and pretrained cannot be setting at the same time'
+            'init_cfg and pretrained cannot be specified at the same time'
         if isinstance(pretrained, str):
-            warnings.warn('DeprecationWarning: pretrained is a deprecated, '
+            warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             self.init_cfg = dict(type='Pretrained', checkpoint=pretrained)
         elif pretrained is None:

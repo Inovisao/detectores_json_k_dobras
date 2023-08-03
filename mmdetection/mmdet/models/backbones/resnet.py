@@ -1,13 +1,14 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
 import torch.nn as nn
 import torch.utils.checkpoint as cp
 from mmcv.cnn import build_conv_layer, build_norm_layer, build_plugin_layer
-from mmcv.runner import BaseModule
+from mmengine.model import BaseModule
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from ..builder import BACKBONES
-from ..utils import ResLayer
+from mmdet.registry import MODELS
+from ..layers import ResLayer
 
 
 class BasicBlock(BaseModule):
@@ -241,7 +242,7 @@ class Bottleneck(BaseModule):
     def forward_plugin(self, x, plugin_names):
         out = x
         for name in plugin_names:
-            out = getattr(self, name)(x)
+            out = getattr(self, name)(out)
         return out
 
     @property
@@ -301,7 +302,7 @@ class Bottleneck(BaseModule):
         return out
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class ResNet(BaseModule):
     """ResNet backbone.
 
@@ -395,9 +396,9 @@ class ResNet(BaseModule):
 
         block_init_cfg = None
         assert not (init_cfg and pretrained), \
-            'init_cfg and pretrained cannot be setting at the same time'
+            'init_cfg and pretrained cannot be specified at the same time'
         if isinstance(pretrained, str):
-            warnings.warn('DeprecationWarning: pretrained is a deprecated, '
+            warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             self.init_cfg = dict(type='Pretrained', checkpoint=pretrained)
         elif pretrained is None:
@@ -656,7 +657,7 @@ class ResNet(BaseModule):
                     m.eval()
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class ResNetV1d(ResNet):
     r"""ResNetV1d variant described in `Bag of Tricks
     <https://arxiv.org/pdf/1812.01187.pdf>`_.

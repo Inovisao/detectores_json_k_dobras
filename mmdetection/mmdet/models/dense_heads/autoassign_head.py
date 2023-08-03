@@ -1,15 +1,20 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+from typing import Dict, List, Sequence, Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from mmcv.cnn import bias_init_with_prob, normal_init
-from mmcv.runner import force_fp32
+from mmcv.cnn import Scale
+from mmengine.model import bias_init_with_prob, normal_init
+from mmengine.structures import InstanceData
+from torch import Tensor
 
-from mmdet.core import distance2bbox, multi_apply
-from mmdet.core.bbox import bbox_overlaps
-from mmdet.models import HEADS
-from mmdet.models.dense_heads.atss_head import reduce_mean
-from mmdet.models.dense_heads.fcos_head import FCOSHead
-from mmdet.models.dense_heads.paa_head import levels_to_images
+from mmdet.registry import MODELS
+from mmdet.structures.bbox import bbox_overlaps
+from mmdet.utils import InstanceList, OptInstanceList, reduce_mean
+from ..task_modules.prior_generators import MlvlPointGenerator
+from ..utils import levels_to_images, multi_apply
+from .fcos_head import FCOSHead
 
 EPS = 1e-12
 
@@ -26,24 +31,27 @@ class CenterPrior(nn.Module):
             center prior when no point falls in gt_bbox. Only work when
             force_topk if True. Defaults to 9.
         num_classes (int): The class number of dataset. Defaults to 80.
-        strides (tuple[int]): The stride of each input feature map. Defaults
-            to (8, 16, 32, 64, 128).
+        strides (Sequence[int]): The stride of each input feature map.
+            Defaults to (8, 16, 32, 64, 128).
     """
 
-    def __init__(self,
-                 force_topk=False,
-                 topk=9,
-                 num_classes=80,
-                 strides=(8, 16, 32, 64, 128)):
-        super(CenterPrior, self).__init__()
+    def __init__(
+        self,
+        force_topk: bool = False,
+        topk: int = 9,
+        num_classes: int = 80,
+        strides: Sequence[int] = (8, 16, 32, 64, 128)
+    ) -> None:
+        super().__init__()
         self.mean = nn.Parameter(torch.zeros(num_classes, 2))
         self.sigma = nn.Parameter(torch.ones(num_classes, 2))
         self.strides = strides
         self.force_topk = force_topk
         self.topk = topk
 
-    def forward(self, anchor_points_list, gt_bboxes, labels,
-                inside_gt_bbox_mask):
+    def forward(self, anchor_points_list: List[Tensor],
+                gt_instances: InstanceData,
+                inside_gt_bbox_mask: Tensor) -> Tuple[Tensor, Tensor]:
         """Get the center prior of each point on the feature map for each
         instance.
 
@@ -51,26 +59,28 @@ class CenterPrior(nn.Module):
             anchor_points_list (list[Tensor]): list of coordinate
                 of points on feature map. Each with shape
                 (num_points, 2).
-            gt_bboxes (Tensor): The gt_bboxes with shape of
-                (num_gt, 4).
-            labels (Tensor): The gt_labels with shape of (num_gt).
+            gt_instances (:obj:`InstanceData`): Ground truth of instance
+                annotations. It should includes ``bboxes`` and ``labels``
+                attributes.
             inside_gt_bbox_mask (Tensor): Tensor of bool type,
                 with shape of (num_points, num_gt), each
                 value is used to mark whether this point falls
                 within a certain gt.
 
         Returns:
-            tuple(Tensor):
+            tuple[Tensor, Tensor]:
 
-                - center_prior_weights(Tensor): Float tensor with shape \
-                    of (num_points, num_gt). Each value represents \
-                    the center weighting coefficient.
-                - inside_gt_bbox_mask (Tensor): Tensor of bool type, \
-                    with shape of (num_points, num_gt), each \
-                    value is used to mark whether this point falls \
-                    within a certain gt or is the topk nearest points for \
-                    a specific gt_bbox.
+            - center_prior_weights(Tensor): Float tensor with shape  of \
+            (num_points, num_gt). Each value represents the center \
+            weighting coefficient.
+            - inside_gt_bbox_mask (Tensor): Tensor of bool type, with shape \
+            of (num_points, num_gt), each value is used to mark whether this \
+            point falls within a certain gt or is the topk nearest points for \
+            a specific gt_bbox.
         """
+        gt_bboxes = gt_instances.bboxes
+        labels = gt_instances.labels
+
         inside_gt_bbox_mask = inside_gt_bbox_mask.clone()
         num_gts = len(labels)
         num_points = sum([len(item) for item in anchor_points_list])
@@ -120,11 +130,12 @@ class CenterPrior(nn.Module):
         return center_prior_weights, inside_gt_bbox_mask
 
 
-@HEADS.register_module()
+@MODELS.register_module()
 class AutoAssignHead(FCOSHead):
-    """AutoAssignHead head used in `AutoAssign.
+    """AutoAssignHead head used in AutoAssign.
 
-    <https://arxiv.org/abs/2007.03496>`_.
+    More details can be found in the `paper
+    <https://arxiv.org/abs/2007.03496>`_ .
 
     Args:
         force_topk (bool): Used in center prior initialization to
@@ -142,12 +153,12 @@ class AutoAssignHead(FCOSHead):
 
     def __init__(self,
                  *args,
-                 force_topk=False,
-                 topk=9,
-                 pos_loss_weight=0.25,
-                 neg_loss_weight=0.75,
-                 center_loss_weight=0.75,
-                 **kwargs):
+                 force_topk: bool = False,
+                 topk: int = 9,
+                 pos_loss_weight: float = 0.25,
+                 neg_loss_weight: float = 0.75,
+                 center_loss_weight: float = 0.75,
+                 **kwargs) -> None:
         super().__init__(*args, conv_bias=True, **kwargs)
         self.center_prior = CenterPrior(
             force_topk=force_topk,
@@ -157,8 +168,9 @@ class AutoAssignHead(FCOSHead):
         self.pos_loss_weight = pos_loss_weight
         self.neg_loss_weight = neg_loss_weight
         self.center_loss_weight = center_loss_weight
+        self.prior_generator = MlvlPointGenerator(self.strides, offset=0)
 
-    def init_weights(self):
+    def init_weights(self) -> None:
         """Initialize weights of the head.
 
         In particular, we have special initialization for classified conv's and
@@ -170,36 +182,21 @@ class AutoAssignHead(FCOSHead):
         normal_init(self.conv_cls, std=0.01, bias=bias_cls)
         normal_init(self.conv_reg, std=0.01, bias=4.0)
 
-    def _get_points_single(self,
-                           featmap_size,
-                           stride,
-                           dtype,
-                           device,
-                           flatten=False):
-        """Almost the same as the implementation in fcos, we remove half stride
-        offset to align with the original implementation."""
-
-        y, x = super(FCOSHead,
-                     self)._get_points_single(featmap_size, stride, dtype,
-                                              device)
-        points = torch.stack((x.reshape(-1) * stride, y.reshape(-1) * stride),
-                             dim=-1)
-        return points
-
-    def forward_single(self, x, scale, stride):
+    def forward_single(self, x: Tensor, scale: Scale,
+                       stride: int) -> Tuple[Tensor, Tensor, Tensor]:
         """Forward features of a single scale level.
 
         Args:
             x (Tensor): FPN feature maps of the specified stride.
-            scale (:obj: `mmcv.cnn.Scale`): Learnable scale module to resize
+            scale (:obj:`mmcv.cnn.Scale`): Learnable scale module to resize
                 the bbox prediction.
             stride (int): The corresponding stride for feature maps, only
                 used to normalize the bbox prediction when self.norm_on_bbox
                 is True.
 
         Returns:
-            tuple: scores for each class, bbox predictions and centerness \
-                predictions of input feature maps.
+            tuple[Tensor, Tensor, Tensor]: scores for each class, bbox
+            predictions and centerness predictions of input feature maps.
         """
         cls_score, bbox_pred, cls_feat, reg_feat = super(
             FCOSHead, self).forward_single(x)
@@ -207,12 +204,16 @@ class AutoAssignHead(FCOSHead):
         # scale the bbox_pred of different level
         # float to avoid overflow when enabling FP16
         bbox_pred = scale(bbox_pred).float()
-        bbox_pred = F.relu(bbox_pred)
+        # bbox_pred needed for gradient computation has been modified
+        # by F.relu(bbox_pred) when run with PyTorch 1.10. So replace
+        # F.relu(bbox_pred) with bbox_pred.clamp(min=0)
+        bbox_pred = bbox_pred.clamp(min=0)
         bbox_pred *= stride
         return cls_score, bbox_pred, centerness
 
-    def get_pos_loss_single(self, cls_score, objectness, reg_loss, gt_labels,
-                            center_prior_weights):
+    def get_pos_loss_single(self, cls_score: Tensor, objectness: Tensor,
+                            reg_loss: Tensor, gt_instances: InstanceData,
+                            center_prior_weights: Tensor) -> Tuple[Tensor]:
         """Calculate the positive loss of all points in gt_bboxes.
 
         Args:
@@ -222,8 +223,9 @@ class AutoAssignHead(FCOSHead):
                 has shape (num_points, 1).
             reg_loss (Tensor): The regression loss of each gt_bbox and each
                 prediction box, has shape of (num_points, num_gt).
-            gt_labels (Tensor): The zeros based gt_labels of all gt
-                with shape of (num_gt,).
+            gt_instances (:obj:`InstanceData`): Ground truth of instance
+                annotations. It should includes ``bboxes`` and ``labels``
+                attributes.
             center_prior_weights (Tensor): Float tensor with shape
                 of (num_points, num_gt). Each value represents
                 the center weighting coefficient.
@@ -231,9 +233,10 @@ class AutoAssignHead(FCOSHead):
         Returns:
             tuple[Tensor]:
 
-                - pos_loss (Tensor): The positive loss of all points
-                  in the gt_bboxes.
+            - pos_loss (Tensor): The positive loss of all points in the \
+            gt_bboxes.
         """
+        gt_labels = gt_instances.labels
         # p_loc: localization confidence
         p_loc = torch.exp(-reg_loss)
         # p_cls: classification confidence
@@ -255,8 +258,9 @@ class AutoAssignHead(FCOSHead):
         pos_loss = pos_loss.sum() * self.pos_loss_weight
         return pos_loss,
 
-    def get_neg_loss_single(self, cls_score, objectness, gt_labels, ious,
-                            inside_gt_bbox_mask):
+    def get_neg_loss_single(self, cls_score: Tensor, objectness: Tensor,
+                            gt_instances: InstanceData, ious: Tensor,
+                            inside_gt_bbox_mask: Tensor) -> Tuple[Tensor]:
         """Calculate the negative loss of all points in feature map.
 
         Args:
@@ -264,8 +268,9 @@ class AutoAssignHead(FCOSHead):
                 the feature map. The shape is (num_points, num_class).
             objectness (Tensor): Foreground probability of all points
                 and is shape of (num_points, 1).
-            gt_labels (Tensor): The zeros based label of all gt with shape of
-                (num_gt).
+            gt_instances (:obj:`InstanceData`): Ground truth of instance
+                annotations. It should includes ``bboxes`` and ``labels``
+                attributes.
             ious (Tensor): Float tensor with shape of (num_points, num_gt).
                 Each value represent the iou of pred_bbox and gt_bboxes.
             inside_gt_bbox_mask (Tensor): Tensor of bool type,
@@ -276,9 +281,10 @@ class AutoAssignHead(FCOSHead):
         Returns:
             tuple[Tensor]:
 
-                - neg_loss (Tensor): The negative loss of all points
-                  in the feature map.
+            - neg_loss (Tensor): The negative loss of all points in the \
+            feature map.
         """
+        gt_labels = gt_instances.labels
         num_gts = len(gt_labels)
         joint_conf = (cls_score * objectness)
         p_neg_weight = torch.ones_like(joint_conf)
@@ -310,16 +316,17 @@ class AutoAssignHead(FCOSHead):
         neg_loss = neg_loss.sum() * self.neg_loss_weight
         return neg_loss,
 
-    @force_fp32(apply_to=('cls_scores', 'bbox_preds', 'objectnesses'))
-    def loss(self,
-             cls_scores,
-             bbox_preds,
-             objectnesses,
-             gt_bboxes,
-             gt_labels,
-             img_metas,
-             gt_bboxes_ignore=None):
-        """Compute loss of the head.
+    def loss_by_feat(
+        self,
+        cls_scores: List[Tensor],
+        bbox_preds: List[Tensor],
+        objectnesses: List[Tensor],
+        batch_gt_instances: InstanceList,
+        batch_img_metas: List[dict],
+        batch_gt_instances_ignore: OptInstanceList = None
+    ) -> Dict[str, Tensor]:
+        """Calculate the loss based on the features extracted by the detection
+        head.
 
         Args:
             cls_scores (list[Tensor]): Box scores for each scale level,
@@ -330,37 +337,40 @@ class AutoAssignHead(FCOSHead):
                 num_points * 4.
             objectnesses (list[Tensor]): objectness for each scale level, each
                 is a 4D-tensor, the channel number is num_points * 1.
-            gt_bboxes (list[Tensor]): Ground truth bboxes for each image with
-                shape (num_gts, 4) in [tl_x, tl_y, br_x, br_y] format.
-            gt_labels (list[Tensor]): class indices corresponding to each box
-            img_metas (list[dict]): Meta information of each image, e.g.,
+            batch_gt_instances (list[:obj:`InstanceData`]): Batch of
+                gt_instance. It usually includes ``bboxes`` and ``labels``
+                attributes.
+            batch_img_metas (list[dict]): Meta information of each image, e.g.,
                 image size, scaling factor, etc.
-            gt_bboxes_ignore (None | list[Tensor]): specify which bounding
-                boxes can be ignored when computing the loss.
+            batch_gt_instances_ignore (list[:obj:`InstanceData`], optional):
+                Batch of gt_instances_ignore. It includes ``bboxes`` attribute
+                data that is ignored during training and testing.
+                Defaults to None.
 
         Returns:
             dict[str, Tensor]: A dictionary of loss components.
         """
 
         assert len(cls_scores) == len(bbox_preds) == len(objectnesses)
-        all_num_gt = sum([len(item) for item in gt_bboxes])
+        all_num_gt = sum([len(item) for item in batch_gt_instances])
         featmap_sizes = [featmap.size()[-2:] for featmap in cls_scores]
-        all_level_points = self.get_points(featmap_sizes, bbox_preds[0].dtype,
-                                           bbox_preds[0].device)
+        all_level_points = self.prior_generator.grid_priors(
+            featmap_sizes,
+            dtype=bbox_preds[0].dtype,
+            device=bbox_preds[0].device)
         inside_gt_bbox_mask_list, bbox_targets_list = self.get_targets(
-            all_level_points, gt_bboxes)
+            all_level_points, batch_gt_instances)
 
         center_prior_weight_list = []
         temp_inside_gt_bbox_mask_list = []
-        for gt_bboxe, gt_label, inside_gt_bbox_mask in zip(
-                gt_bboxes, gt_labels, inside_gt_bbox_mask_list):
+        for gt_instances, inside_gt_bbox_mask in zip(batch_gt_instances,
+                                                     inside_gt_bbox_mask_list):
             center_prior_weight, inside_gt_bbox_mask = \
-                self.center_prior(all_level_points, gt_bboxe, gt_label,
+                self.center_prior(all_level_points, gt_instances,
                                   inside_gt_bbox_mask)
             center_prior_weight_list.append(center_prior_weight)
             temp_inside_gt_bbox_mask_list.append(inside_gt_bbox_mask)
         inside_gt_bbox_mask_list = temp_inside_gt_bbox_mask_list
-
         mlvl_points = torch.cat(all_level_points, dim=0)
         bbox_preds = levels_to_images(bbox_preds)
         cls_scores = levels_to_images(cls_scores)
@@ -370,17 +380,18 @@ class AutoAssignHead(FCOSHead):
         ious_list = []
         num_points = len(mlvl_points)
 
-        for bbox_pred, gt_bboxe, inside_gt_bbox_mask in zip(
+        for bbox_pred, encoded_targets, inside_gt_bbox_mask in zip(
                 bbox_preds, bbox_targets_list, inside_gt_bbox_mask_list):
-            temp_num_gt = gt_bboxe.size(1)
+            temp_num_gt = encoded_targets.size(1)
             expand_mlvl_points = mlvl_points[:, None, :].expand(
                 num_points, temp_num_gt, 2).reshape(-1, 2)
-            gt_bboxe = gt_bboxe.reshape(-1, 4)
+            encoded_targets = encoded_targets.reshape(-1, 4)
             expand_bbox_pred = bbox_pred[:, None, :].expand(
                 num_points, temp_num_gt, 4).reshape(-1, 4)
-            decoded_bbox_preds = distance2bbox(expand_mlvl_points,
-                                               expand_bbox_pred)
-            decoded_target_preds = distance2bbox(expand_mlvl_points, gt_bboxe)
+            decoded_bbox_preds = self.bbox_coder.decode(
+                expand_mlvl_points, expand_bbox_pred)
+            decoded_target_preds = self.bbox_coder.decode(
+                expand_mlvl_points, encoded_targets)
             with torch.no_grad():
                 ious = bbox_overlaps(
                     decoded_bbox_preds, decoded_target_preds, is_aligned=True)
@@ -402,26 +413,27 @@ class AutoAssignHead(FCOSHead):
         cls_scores = [item.sigmoid() for item in cls_scores]
         objectnesses = [item.sigmoid() for item in objectnesses]
         pos_loss_list, = multi_apply(self.get_pos_loss_single, cls_scores,
-                                     objectnesses, reg_loss_list, gt_labels,
+                                     objectnesses, reg_loss_list,
+                                     batch_gt_instances,
                                      center_prior_weight_list)
         pos_avg_factor = reduce_mean(
             bbox_pred.new_tensor(all_num_gt)).clamp_(min=1)
         pos_loss = sum(pos_loss_list) / pos_avg_factor
 
         neg_loss_list, = multi_apply(self.get_neg_loss_single, cls_scores,
-                                     objectnesses, gt_labels, ious_list,
-                                     inside_gt_bbox_mask_list)
+                                     objectnesses, batch_gt_instances,
+                                     ious_list, inside_gt_bbox_mask_list)
         neg_avg_factor = sum(item.data.sum()
                              for item in center_prior_weight_list)
         neg_avg_factor = reduce_mean(neg_avg_factor).clamp_(min=1)
         neg_loss = sum(neg_loss_list) / neg_avg_factor
 
         center_loss = []
-        for i in range(len(img_metas)):
+        for i in range(len(batch_img_metas)):
 
             if inside_gt_bbox_mask_list[i].any():
                 center_loss.append(
-                    len(gt_bboxes[i]) /
+                    len(batch_gt_instances[i]) /
                     center_prior_weight_list[i].sum().clamp_(min=EPS))
             # when width or height of gt_bbox is smaller than stride of p3
             else:
@@ -441,62 +453,57 @@ class AutoAssignHead(FCOSHead):
 
         return loss
 
-    def get_targets(self, points, gt_bboxes_list):
+    def get_targets(
+            self, points: List[Tensor], batch_gt_instances: InstanceList
+    ) -> Tuple[List[Tensor], List[Tensor]]:
         """Compute regression targets and each point inside or outside gt_bbox
         in multiple images.
 
         Args:
             points (list[Tensor]): Points of all fpn level, each has shape
                 (num_points, 2).
-            gt_bboxes_list (list[Tensor]): Ground truth bboxes of each image,
-                each has shape (num_gt, 4).
+            batch_gt_instances (list[:obj:`InstanceData`]): Batch of
+                gt_instance. It usually includes ``bboxes`` and ``labels``
+                attributes.
 
         Returns:
-            tuple(list[Tensor]):
+            tuple(list[Tensor], list[Tensor]):
 
-                - inside_gt_bbox_mask_list (list[Tensor]): Each
-                  Tensor is with bool type and shape of
-                  (num_points, num_gt), each value
-                  is used to mark whether this point falls
-                  within a certain gt.
-                - concat_lvl_bbox_targets (list[Tensor]): BBox
-                  targets of each level. Each tensor has shape
-                  (num_points, num_gt, 4).
+            - inside_gt_bbox_mask_list (list[Tensor]): Each Tensor is with \
+            bool type and shape of (num_points, num_gt), each value is used \
+            to mark whether this point falls within a certain gt.
+            - concat_lvl_bbox_targets (list[Tensor]): BBox targets of each \
+            level. Each tensor has shape (num_points, num_gt, 4).
         """
 
         concat_points = torch.cat(points, dim=0)
         # the number of points per img, per lvl
-        num_points = [center.size(0) for center in points]
         inside_gt_bbox_mask_list, bbox_targets_list = multi_apply(
-            self._get_target_single, gt_bboxes_list, points=concat_points)
-        bbox_targets_list = [
-            list(bbox_targets.split(num_points, 0))
-            for bbox_targets in bbox_targets_list
-        ]
-        concat_lvl_bbox_targets = [
-            torch.cat(item, dim=0) for item in bbox_targets_list
-        ]
-        return inside_gt_bbox_mask_list, concat_lvl_bbox_targets
+            self._get_targets_single, batch_gt_instances, points=concat_points)
+        return inside_gt_bbox_mask_list, bbox_targets_list
 
-    def _get_target_single(self, gt_bboxes, points):
+    def _get_targets_single(self, gt_instances: InstanceData,
+                            points: Tensor) -> Tuple[Tensor, Tensor]:
         """Compute regression targets and each point inside or outside gt_bbox
         for a single image.
 
         Args:
-            gt_bboxes (Tensor): gt_bbox of single image, has shape
-                (num_gt,)
+            gt_instances (:obj:`InstanceData`): Ground truth of instance
+                annotations. It should includes ``bboxes`` and ``labels``
+                attributes.
             points (Tensor): Points of all fpn level, has shape
                 (num_points, 2).
 
         Returns:
-            tuple[Tensor]: Containing the following Tensors:
+            tuple[Tensor, Tensor]: Containing the following Tensors:
 
-                - inside_gt_bbox_mask (Tensor): Bool tensor with shape
-                  (num_points, num_gt), each value is used to mark
-                  whether this point falls within a certain gt.
-                - bbox_targets (Tensor): BBox targets of each points with
-                  each gt_bboxes, has shape (num_points, num_gt, 4).
+            - inside_gt_bbox_mask (Tensor): Bool tensor with shape \
+            (num_points, num_gt), each value is used to mark whether this \
+            point falls within a certain gt.
+            - bbox_targets (Tensor): BBox targets of each points with each \
+            gt_bboxes, has shape (num_points, num_gt, 4).
         """
+        gt_bboxes = gt_instances.bboxes
         num_points = points.size(0)
         num_gts = gt_bboxes.size(0)
         gt_bboxes = gt_bboxes[None].expand(num_points, num_gts, 4)

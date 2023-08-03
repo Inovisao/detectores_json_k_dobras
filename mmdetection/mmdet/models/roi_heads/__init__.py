@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 from .base_roi_head import BaseRoIHead
 from .bbox_heads import (BBoxHead, ConvFCBBoxHead, DIIHead,
                          DoubleConvFCBBoxHead, SABLHead, SCNetBBoxHead,
@@ -12,6 +13,7 @@ from .mask_heads import (CoarseMaskHead, FCNMaskHead, FeatureRelayHead,
                          HTCMaskHead, MaskIoUHead, MaskPointHead,
                          SCNetMaskHead, SCNetSemanticHead)
 from .mask_scoring_roi_head import MaskScoringRoIHead
+from .multi_instance_roi_head import MultiInstanceRoIHead
 from .pisa_roi_head import PISARoIHead
 from .point_rend_roi_head import PointRendRoIHead
 from .roi_extractors import (BaseRoIExtractor, GenericRoIExtractor,
@@ -32,5 +34,5 @@ __all__ = [
     'SingleRoIExtractor', 'PISARoIHead', 'PointRendRoIHead', 'MaskPointHead',
     'CoarseMaskHead', 'DynamicRoIHead', 'SparseRoIHead', 'TridentRoIHead',
     'SCNetRoIHead', 'SCNetMaskHead', 'SCNetSemanticHead', 'SCNetBBoxHead',
-    'FeatureRelayHead', 'GlobalContextHead'
+    'FeatureRelayHead', 'GlobalContextHead', 'MultiInstanceRoIHead'
 ]

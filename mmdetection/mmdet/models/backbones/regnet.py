@@ -1,15 +1,16 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import warnings
 
 import numpy as np
 import torch.nn as nn
 from mmcv.cnn import build_conv_layer, build_norm_layer
 
-from ..builder import BACKBONES
+from mmdet.registry import MODELS
 from .resnet import ResNet
 from .resnext import Bottleneck
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class RegNet(ResNet):
     """RegNet backbone.
 
@@ -171,9 +172,9 @@ class RegNet(ResNet):
 
         block_init_cfg = None
         assert not (init_cfg and pretrained), \
-            'init_cfg and pretrained cannot be setting at the same time'
+            'init_cfg and pretrained cannot be specified at the same time'
         if isinstance(pretrained, str):
-            warnings.warn('DeprecationWarning: pretrained is a deprecated, '
+            warnings.warn('DeprecationWarning: pretrained is deprecated, '
                           'please use "init_cfg" instead')
             self.init_cfg = dict(type='Pretrained', checkpoint=pretrained)
         elif pretrained is None:

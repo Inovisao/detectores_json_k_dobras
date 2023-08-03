@@ -1,12 +1,13 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import torch.nn as nn
 import torch.utils.checkpoint as cp
-from mmcv.cnn import (build_conv_layer, build_norm_layer, constant_init,
-                      kaiming_init)
-from mmcv.runner import Sequential, load_checkpoint
+from mmcv.cnn import build_conv_layer, build_norm_layer
+from mmengine.logging import MMLogger
+from mmengine.model import Sequential, constant_init, kaiming_init
+from mmengine.runner.checkpoint import load_checkpoint
 from torch.nn.modules.batchnorm import _BatchNorm
 
-from mmdet.utils import get_root_logger
-from ..builder import BACKBONES
+from mmdet.registry import MODELS
 from .resnet import BasicBlock
 from .resnet import Bottleneck as _Bottleneck
 from .resnet import ResNet
@@ -207,7 +208,7 @@ class ResLayer(Sequential):
         super(ResLayer, self).__init__(*layers)
 
 
-@BACKBONES.register_module()
+@MODELS.register_module()
 class DetectoRS_ResNet(ResNet):
     """ResNet backbone for DetectoRS.
 
@@ -238,9 +239,18 @@ class DetectoRS_ResNet(ResNet):
                  pretrained=None,
                  init_cfg=None,
                  **kwargs):
-        assert init_cfg is None, 'To prevent abnormal initialization ' \
-                                 'behavior, init_cfg is not allowed to be set'
+        assert not (init_cfg and pretrained), \
+            'init_cfg and pretrained cannot be specified at the same time'
         self.pretrained = pretrained
+        if init_cfg is not None:
+            assert isinstance(init_cfg, dict), \
+                f'init_cfg must be a dict, but got {type(init_cfg)}'
+            if 'type' in init_cfg:
+                assert init_cfg.get('type') == 'Pretrained', \
+                    'Only can initialize module by loading a pretrained model'
+            else:
+                raise KeyError('`init_cfg` must contain the key "type"')
+            self.pretrained = init_cfg.get('checkpoint')
         self.sac = sac
         self.stage_with_sac = stage_with_sac
         self.rfp_inplanes = rfp_inplanes
@@ -288,7 +298,7 @@ class DetectoRS_ResNet(ResNet):
         # super(DetectoRS_ResNet, self).init_weights()
 
         if isinstance(self.pretrained, str):
-            logger = get_root_logger()
+            logger = MMLogger.get_current_instance()
             load_checkpoint(self, self.pretrained, strict=False, logger=logger)
         elif self.pretrained is None:
             for m in self.modules():
