@@ -85,9 +85,9 @@ class Service(object):
                 if 'data_prefix' in self.cfg.train_dataloader.dataset:
                     self.cfg.train_dataloader.dataset.data_prefix = dict(img='all/train/')
             #if 'metainfo' not in self.cfg.train_dataloader.dataset:
-            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=('pig'))
+            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=('pig',))
             #else:
-            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=('pig'))
+            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=('pig',))
 
             self.cfg.val_dataloader.batch_size= BATCH_SIZE
             if 'data_root' in self.cfg.val_dataloader.dataset:
