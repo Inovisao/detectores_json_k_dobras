@@ -1,4 +1,4 @@
-# Copyright (c) OpenMMLab. All rights reserved.
+    # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import logging
 import os
@@ -17,14 +17,16 @@ import mmcv
 import cv2
 
 
-DATA_ROOT          = '/home/jr/development/inovisao/dev/detectores_json_k_dobras/dataset'
-CLASSES            = dict(classes=('pig',))
+DATA_ROOT          = '/home/junior/Expjr/detectores_json_k_dobras/dataset/'
+CLASSES            = ('pig',) 
 BATCH_SIZE         = 5
 MAX_EPOCHS         = 5
 LEARNING_RATE      = 0.0003
 OPTMIZER           = 'SGD'
 THRESHOLD          = 0.2
 THRESHOLD_CLASSIFY = 0.2
+DEVICE             = 'cuda:0'
+DATASET_TYPE       = 'CocoDataset'
 
 class Service(object):
 
@@ -58,71 +60,102 @@ class Service(object):
             # start training
             runner.train()
 
+            # start testing
+            runner.val()
+
         except ValueError as error:
             print(error)
 
+            
+    def create_path(self, *args):
+        try:
+            path = ''
+            for arg in args:
+                path = os.path.join(path, arg)
+            return path
+        except ValueError as error:
+            print(error)
+            
     def change_cfg(self, train, test, val, config):
         try:
-            self.cfg.data_root = DATA_ROOT
-            self.cfg.train_dataloader.batch_size = BATCH_SIZE
-            self.cfg.total_epochs = MAX_EPOCHS
+            self.cfg.data_root                    = DATA_ROOT
+            self.cfg.train_dataloader.batch_size  = BATCH_SIZE
+            self.cfg.total_epochs                 = MAX_EPOCHS
             self.cfg.optim_wrapper.optimizer.lr   = LEARNING_RATE
             self.cfg.optim_wrapper.optimizer.type = OPTMIZER
             
             if 'data_root' in self.cfg.train_dataloader.dataset:
-                self.cfg.train_dataloader.dataset.data_root = DATA_ROOT
+                self.cfg.train_dataloader.dataset.data_root              = DATA_ROOT
             if 'dataset' in self.cfg.train_dataloader.dataset:
-                self.cfg.train_dataloader.dataset.dataset['metainfo']=dict(CLASSES)
-                
+                self.cfg.train_dataloader.dataset.dataset['metainfo']    = dict(classes=CLASSES)
                 if 'ann_file' in self.cfg.train_dataloader.dataset.dataset:
-                    self.cfg.train_dataloader.dataset.dataset.ann_file = 'filesJSON/'+str(train)
+                    self.cfg.train_dataloader.dataset.dataset.ann_file   = self.create_path('filesJSON',str(train))
                 if 'data_prefix' in self.cfg.train_dataloader.dataset.dataset:
-                    self.cfg.train_dataloader.dataset.dataset.data_prefix = dict(img='all/train/')
+                    self.cfg.train_dataloader.dataset.dataset.data_prefix= dict(img='all/train/')
             else:
-                self.cfg.train_dataloader.dataset['metainfo']=dict(CLASSES)
+                self.cfg.train_dataloader.dataset['metainfo']     = dict(classes=CLASSES)
                 if 'ann_file' in self.cfg.train_dataloader.dataset:
-                    self.cfg.train_dataloader.dataset.ann_file = 'filesJSON/'+str(train)
+                    self.cfg.train_dataloader.dataset.ann_file    = self.create_path('filesJSON',str(train))
                 if 'data_prefix' in self.cfg.train_dataloader.dataset:
                     self.cfg.train_dataloader.dataset.data_prefix = dict(img='all/train/')
             #if 'metainfo' not in self.cfg.train_dataloader.dataset:
-            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=('pig',))
+            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
             #else:
-            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=('pig',))
+            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
             self.cfg.val_dataloader.batch_size= BATCH_SIZE
             if 'data_root' in self.cfg.val_dataloader.dataset:
                 self.cfg.val_dataloader.dataset.data_root = DATA_ROOT
             if 'ann_file' in self.cfg.val_dataloader.dataset:
-                self.cfg.val_dataloader.dataset.ann_file = 'filesJSON/'+str(val)
+                self.cfg.val_dataloader.dataset.ann_file = self.create_path('filesJSON',str(val))
             if 'data_prefix' in self.cfg.val_dataloader.dataset:
                 self.cfg.val_dataloader.dataset.data_prefix = dict(img='all/train/')
             if 'metainfo' not in self.cfg.val_dataloader.dataset:
-                self.cfg.val_dataloader.dataset['metainfo'] = dict(CLASSES)
+                self.cfg.val_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
             self.cfg.test_dataloader.batch_size= BATCH_SIZE
             if 'data_root' in self.cfg.test_dataloader.dataset:
                 self.cfg.test_dataloader.dataset.data_root = DATA_ROOT
             if 'ann_file' in self.cfg.test_dataloader.dataset:
-                self.cfg.test_dataloader.dataset.ann_file = 'filesJSON/'+str(test)
+                self.cfg.test_dataloader.dataset.ann_file = self.create_path('filesJSON',str(test))
             if 'data_prefix' in self.cfg.test_dataloader.dataset:
                 self.cfg.test_dataloader.dataset.data_prefix = dict(img='all/train/')
             if 'metainfo' not in self.cfg.test_dataloader.dataset:
-                self.cfg.test_dataloader.dataset['metainfo'] = dict(CLASSES)
+                self.cfg.test_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
-            name_work_dir = os.path.join('work_dirs' , config.split('.py')[0])
-            self.cfg.val_evaluator.ann_file  = DATA_ROOT + '/filesJSON/'+str(val)
-            self.cfg.test_evaluator.ann_file = DATA_ROOT + '/filesJSON/'+str(test)
-            self.cfg.max_epochs  = MAX_EPOCHS
-            self.cfg.work_dir    = os.path.join(os.getcwd(),name_work_dir)
-            self.cfg.num_classes = len(CLASSES)
+            name_work_dir = self.create_path('work_dirs' , config.split('.py')[0])
+            self.cfg.val_evaluator.ann_file  = self.create_path(DATA_ROOT , 'filesJSON' , str(val))
+            self.cfg.test_evaluator.ann_file = self.create_path(DATA_ROOT , 'filesJSON' , str(test))
+            self.cfg.max_epochs              = MAX_EPOCHS
+            self.cfg.work_dir                = self.create_path(os.getcwd(),name_work_dir)
+            self.cfg.num_classes             = len(CLASSES)
             self.cfg.train_batch_size_per_gpu = 2
-            self.cfg.dataset_type = 'CocoDataset'
+            self.cfg.dataset_type             = DATASET_TYPE
+            self.cfg['train_cfg']             = dict(type='EpochBasedTrainLoop',max_epochs=MAX_EPOCHS,val_interval=MAX_EPOCHS )
+            self.cfg['val_cfg']               = dict(type='ValLoop')
+            self.cfg['param_scheduler']       = [dict(type='LinearLR', start_factor=0.001,by_epoch=False,begin=0,end=500), dict(type='MultiStepLR', by_epoch=True,  begin=0,   end=12,  milestones=[8, 11],  gamma=0.1)  ]
+            self.cfg['default_hooks']         = dict(checkpoint=dict(type='CheckpointHook',save_best='auto'))
 
         except ValueError as error:
             print(error)
 
 class Training(object):
 
+    def download_models(self):
+        try:
+            configs =[
+                    'rtmdet_tiny_8xb32-300e_coco',
+                    'cornernet_hourglass104_8xb6-210e-mstest_coco',
+                    'ssd300_coco',
+                    'paa_r50_fpn_1x_coco',
+                    'tridentnet_r50-caffe_1x_coco'
+                ]
+            for config in configs:
+                print(config)
+                os.system('mim download mmdet --config '+config+' --dest .')
+        except ValueError as error:
+            print(error)
+            
     def get_files(self,path):
         files = os.listdir(path)
         names = {'train':{},'val':{},'test':{}}
@@ -209,13 +242,13 @@ class Training(object):
         try:
             files = self.get_files(path)
             test  = files.get('test')
-            model = init_detector(config, checkpoint, device='cuda:0')
+            model = init_detector(config, checkpoint, device=DEVICE)
             tp_all    = 0              # This variable is responsable for counting true positive from all images
             fp_all    = 0              # This variable is responsable for counting false positive from all images
             all_imgs  = 0              # This variable is responsable for counting all images 
 
             for key in test:           # All folders 
-                p_test    = DATA_ROOT + '/filesJSON/'+ test.get(key)
+                p_test    = self.create_path(DATA_ROOT , 'filesJSON', test.get(key))
                 coco      = COCO(p_test)
                 image_ids = coco.getImgIds()
                 print(p_test)
@@ -224,7 +257,7 @@ class Training(object):
                     image_info = coco.loadImgs(id)
                     #print(image_info)
                     name_img       = image_info[0].get('file_name')
-                    img            = mmcv.imread(DATA_ROOT+'/all/train/'+name_img)
+                    img            = mmcv.imread( self.create_path(DATA_ROOT,'/all/train' , name_img))
                     annotations    = coco.loadAnns( coco.getAnnIds(imgIds=id) )
                     bboxes_gt      = []
                     tp_img         = 0     # This variable is responsable for counting true positive from one image
@@ -267,7 +300,7 @@ class Training(object):
                     for pred in bboxes_pred:
                         img  = self.draw_rectangle(pred, img ,color=(0,0,255))
 
-                    cv2.imwrite('res/'+name_img,img)
+                    cv2.imwrite( self.create_path('res' , name_img),img)
                     tp_all   += tp_img
                     fp_all   += fp_img
                     all_imgs += all_img
@@ -284,13 +317,18 @@ class Training(object):
             train = files.get('train')
             test  = files.get('test')
             val   = files.get('val')
-            for key in train:
+            for i,key in enumerate(train):
                 p_train = train.get(key)
                 p_val   = val.get(key)
                 p_test  = test.get(key)
 
                 print(p_train)
                 service = Service(config, train=p_train, val=p_val,test=p_test)
+                if i == 2:
+                    print('Remember of eraser lines 303-305 after testing this code!!!')
+                    exit(1)
+                #print('To Processing all. You must eraser the line 294.')
+                #exit(1)
         except ValueError as error:
             print(error)
 
@@ -298,6 +336,8 @@ class Training(object):
 if __name__ == '__main__':
 
     train = Training()
-    train.running('../dataset/filesJSON')
+    #train.download_models()
+    
+    train.running('../dataset/filesJSON', config='cornernet_hourglass104_10xb5-crop511-210e-mstest_coco.py')
     #train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/epoch_24.pth')
     print('ok')
