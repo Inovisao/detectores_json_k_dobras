@@ -1,20 +1,21 @@
 # Código que irá treinar as redes, executar os testes e gravar os resultados
 # Autor: Cedido pelo Prof. Jonathan Andrade Silva (UFMS)
-#        Pequenas adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
-
+#        Adaptações feitas por Hemerson Pistori (pistori@ucdb.br)
+#
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
 # DEFINE ALGUNS HIPERPARÂMETROS
 
-CLASSES=('eucaliptos',)
+CLASSES=('larvae',)
 DOBRAS=5
-EPOCAS=15
-LIMIAR_CLASSIFICADOR=0.5
-LIMIAR_IOU=0.3
+EPOCAS=20
+LIMIAR_CLASSIFICADOR=0.3
+LIMIAR_IOU=0.01
 
-APENAS_TESTA=False
+APENAS_TESTA=True
 SALVAR_IMAGENS=True
+MOSTRA_NOME_CLASSE=len(CLASSES)>1
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -98,10 +99,18 @@ plt.rcParams["axes.grid"] = False
 
 
 #Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
-TAXA_APRENDIZAGEM=[0.05,0.01,0.05,0.01,0.05,0.05]
+TAXA_APRENDIZAGEM=6*[0.001]
 
 
 MODELS_CONFIG = {
+    'sabl': {
+        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
+    },    
+     'fovea': {
+        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
+    },
     'faster':{
         'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
@@ -110,23 +119,10 @@ MODELS_CONFIG = {
         'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
         'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
     },
-#    'atss':{
-#        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
-#    },
-#    'vfnet': {
-#        'config_file': 'configs/vfnet/vfnet_r50_fpn_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/vfnet_r50_fpn_1x_coco_20201027-38db6f58.pth'
-#    },
-#    'sabl': {
-#        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
-#    },
-#     
-#     'fovea': {
-#        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
-#        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
-#    },
+    'atss':{
+        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+    }
 }
 
 
@@ -496,12 +492,14 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
         if TP == True:
           cont_TP+=1
           imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('green'), thickness=1) 
-          cv2.putText(imagex, CLASSES[bboxes2[j]['class']], left_top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_val('green'), thickness=2) 
+          if MOSTRA_NOME_CLASSE:
+            cv2.putText(imagex, CLASSES[bboxes2[j]['class']], left_top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_val('green'), thickness=2) 
 
         else:
           cont_FP+=1
           imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('red'), thickness=1)    
-          cv2.putText(imagex, CLASSES[bboxes2[j]['class']], left_top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_val('red'), thickness=2)
+          if MOSTRA_NOME_CLASSE:
+            cv2.putText(imagex, CLASSES[bboxes2[j]['class']], left_top_text, cv2.FONT_HERSHEY_SIMPLEX, 0.9, color_val('red'), thickness=2)
 
 #    print("TP:"+ str(cont_TP))
     all_TP+=cont_TP    
