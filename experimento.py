@@ -6,9 +6,11 @@
 #----------------------------------------------------------------------------
 #
 # DEFINE ALGUNS HIPERPARÂMETROS
+import json
+import os
 
-CLASSES=('eucaliptos',)
-DOBRAS=5
+CLASSES=()
+DOBRAS=0
 EPOCAS=15
 LIMIAR_CLASSIFICADOR=0.5
 LIMIAR_IOU=0.3
@@ -17,6 +19,26 @@ APENAS_TESTA=False
 SALVAR_IMAGENS=True
 MOSTRA_NOME_CLASSE=len(CLASSES)>1
 
+# COLOCA AS CATEGORIAS NA VARIABEL CLASSE
+with open('dataset/all/train/_annotations.coco.json', 'r') as file:
+  data = json.load(file)
+
+  for category in data["categories"]:
+    if not category["supercategory"] == "none":
+      CLASSES += (category["name"],)
+
+
+# CONTA A QUANTIA DE DOBRAS BASEADO NO NUMERO DE ARQUIVOS
+dir_path = r'dataset/filesJSON'
+count = 0
+
+for path in os.listdir(dir_path):
+    if os.path.isfile(os.path.join(dir_path, path)):
+        count += 1
+    DOBRAS = int(count / 3)
+
+
+print(CLASSES, DOBRAS)
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
