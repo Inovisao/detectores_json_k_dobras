@@ -125,8 +125,9 @@ for (net in nets) {
 
    RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
    MAE = mae(filtrado$groundtruth,filtrado$predicted)
+   MAPE = mape(filtrado$groundtruth,filtrado$predicted)
    R = cor(filtrado$groundtruth,filtrado$predicted,method = "pearson")
-   TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
+   TITULO = sprintf("%s RMSE=%.3f MAE=%.3f MAPE=%.3f r = %.3f",net,RMSE,MAE,MAPE,R)
    MAX <- max(filtrado$groundtruth, filtrado$predicted)
    
    g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
@@ -142,7 +143,7 @@ for (net in nets) {
 }
 
 g <- grid.arrange(grobs=graficos, ncol = 2)
-ggsave(paste("./dataset/counting.png", sep=""),g, width = 8, height = 8)
+ggsave(paste("./dataset/counting.png", sep=""),g, width = 10, height = 12)
 print(g)
 
 
@@ -163,8 +164,9 @@ for (net in nets) {
   
   RMSE = rmse(filtrado$groundtruth,filtrado$predicted)
   MAE = mae(filtrado$groundtruth,filtrado$predicted)
+  MAPE = mape(filtrado$groundtruth,filtrado$predicted)
   R = cor(filtrado$groundtruth,filtrado$predicted,method = "pearson")
-  TITULO = sprintf("%s RMSE = %.3f MAE =  %.3f r = %.3f",net,RMSE,MAE,R)
+  TITULO = sprintf("%s RMSE=%.3f MAE=%.3f MAPE=%.3f r = %.3f",net,RMSE,MAE,MAPE,R)
   MAX <- max(filtrado$groundtruth, filtrado$predicted)
   
   g <- ggplot(filtrado, aes(x=groundtruth, y=predicted)) + 
@@ -180,7 +182,7 @@ for (net in nets) {
 }
 
 g <- grid.arrange(grobs=graficos, ncol = 2)
-ggsave(paste("./dataset/counting_FOLD_1.png", sep=""),g, width = 8, height = 8)
+ggsave(paste("./dataset/counting_FOLD_1.png", sep=""),g, width = 10, height = 12)
 print(g)
 
 
@@ -300,3 +302,4 @@ tukey <- TukeyHSD(dados.anova,'dados$ml',conf.level=0.95)
 tukey
 
 sink()
+
