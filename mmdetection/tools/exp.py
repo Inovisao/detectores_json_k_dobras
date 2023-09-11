@@ -16,15 +16,17 @@ from pycocotools.coco import COCO
 import mmcv
 import cv2
 
+# Lembre que a ordem das classes deve ser a mesma que está no arquivo .json
 
 DATA_ROOT          = '/home/junior/Expjr/detectores_json_k_dobras/dataset/'
-CLASSES            = ('pig',) 
-BATCH_SIZE         = 5
-MAX_EPOCHS         = 5
-LEARNING_RATE      = 0.0003
+CLASSES            = ('pig',)
+#CLASSES            = ('Swollen-Ears','Good_Ears',)
+BATCH_SIZE         = 2
+MAX_EPOCHS         = 10
+LEARNING_RATE      = 0.0001
 OPTMIZER           = 'SGD'
 THRESHOLD          = 0.2
-THRESHOLD_CLASSIFY = 0.2
+THRESHOLD_CLASSIFY = 0.3
 DEVICE             = 'cuda:0'
 DATASET_TYPE       = 'CocoDataset'
 
@@ -43,7 +45,6 @@ class Service(object):
             assert optim_wrapper == 'OptimWrapper', ('`--amp` is only supported when the optimizer wrapper type is 'f'`OptimWrapper` but got {optim_wrapper}.')
             self.cfg.optim_wrapper.type = 'AmpOptimWrapper'
             self.cfg.optim_wrapper.loss_scale = 'dynamic'
-
             self.change_cfg(train=train,test=test,val=val, config=config)
 
             #print(self.cfg)
@@ -62,7 +63,6 @@ class Service(object):
 
             # start testing
             runner.val()
-
         except ValueError as error:
             print(error)
 
@@ -75,7 +75,10 @@ class Service(object):
             return path
         except ValueError as error:
             print(error)
-            
+
+    def colors(self,size):
+        return [(random.randint(a=0,b=255),random.randint(a=0,b=255), random.randint(a=0,b=255)) for _ in range(size)]
+    
     def change_cfg(self, train, test, val, config):
         try:
             self.cfg.data_root                    = DATA_ROOT
@@ -88,12 +91,14 @@ class Service(object):
                 self.cfg.train_dataloader.dataset.data_root              = DATA_ROOT
             if 'dataset' in self.cfg.train_dataloader.dataset:
                 self.cfg.train_dataloader.dataset.dataset['metainfo']    = dict(classes=CLASSES)
+                #self.cfg.train_dataloader.dataset.dataset.CLASSES        = CLASSES
                 if 'ann_file' in self.cfg.train_dataloader.dataset.dataset:
                     self.cfg.train_dataloader.dataset.dataset.ann_file   = self.create_path('filesJSON',str(train))
                 if 'data_prefix' in self.cfg.train_dataloader.dataset.dataset:
                     self.cfg.train_dataloader.dataset.dataset.data_prefix= dict(img='all/train/')
             else:
                 self.cfg.train_dataloader.dataset['metainfo']     = dict(classes=CLASSES)
+                #self.cfg.train_dataloader.CLASSES                 = CLASSES
                 if 'ann_file' in self.cfg.train_dataloader.dataset:
                     self.cfg.train_dataloader.dataset.ann_file    = self.create_path('filesJSON',str(train))
                 if 'data_prefix' in self.cfg.train_dataloader.dataset:
@@ -103,7 +108,8 @@ class Service(object):
             #else:
             #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
-            self.cfg.val_dataloader.batch_size= BATCH_SIZE
+            self.cfg.val_dataloader.batch_size = BATCH_SIZE
+            #self.cfg.val_dataloader.CLASSES  = CLASSES
             if 'data_root' in self.cfg.val_dataloader.dataset:
                 self.cfg.val_dataloader.dataset.data_root = DATA_ROOT
             if 'ann_file' in self.cfg.val_dataloader.dataset:
@@ -113,7 +119,8 @@ class Service(object):
             if 'metainfo' not in self.cfg.val_dataloader.dataset:
                 self.cfg.val_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
-            self.cfg.test_dataloader.batch_size= BATCH_SIZE
+            self.cfg.test_dataloader.batch_size = BATCH_SIZE
+            #self.cfg.test_dataloader.CLASSES   = CLASSES
             if 'data_root' in self.cfg.test_dataloader.dataset:
                 self.cfg.test_dataloader.dataset.data_root = DATA_ROOT
             if 'ann_file' in self.cfg.test_dataloader.dataset:
@@ -123,18 +130,25 @@ class Service(object):
             if 'metainfo' not in self.cfg.test_dataloader.dataset:
                 self.cfg.test_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
+            if 'bbox_head' in self.cfg.model:
+                self.cfg.model.bbox_head.num_classes=len(CLASSES)
+                if 'mask_head' in self.cfg.model.bbox_head:
+                    self.cfg.model.bbox_head.mask_head.num_classes=len(CLASSES)
+
             name_work_dir = self.create_path('work_dirs' , config.split('.py')[0])
-            self.cfg.val_evaluator.ann_file  = self.create_path(DATA_ROOT , 'filesJSON' , str(val))
-            self.cfg.test_evaluator.ann_file = self.create_path(DATA_ROOT , 'filesJSON' , str(test))
-            self.cfg.max_epochs              = MAX_EPOCHS
-            self.cfg.work_dir                = self.create_path(os.getcwd(),name_work_dir)
-            self.cfg.num_classes             = len(CLASSES)
+            self.cfg.val_evaluator.ann_file   = self.create_path(DATA_ROOT , 'filesJSON' , str(val))
+            self.cfg.test_evaluator.ann_file  = self.create_path(DATA_ROOT , 'filesJSON' , str(test))
+            self.cfg.max_epochs               = MAX_EPOCHS
+            self.cfg.work_dir                 = self.create_path(os.getcwd(),name_work_dir)
+            self.cfg.num_classes              = len(CLASSES)
             self.cfg.train_batch_size_per_gpu = 2
             self.cfg.dataset_type             = DATASET_TYPE
             self.cfg['train_cfg']             = dict(type='EpochBasedTrainLoop',max_epochs=MAX_EPOCHS,val_interval=MAX_EPOCHS )
             self.cfg['val_cfg']               = dict(type='ValLoop')
-            self.cfg['param_scheduler']       = [dict(type='LinearLR', start_factor=0.001,by_epoch=False,begin=0,end=500), dict(type='MultiStepLR', by_epoch=True,  begin=0,   end=12,  milestones=[8, 11],  gamma=0.1)  ]
+            self.cfg['param_scheduler']       = [dict(type='LinearLR', start_factor=0.001,by_epoch=False,begin=0,end=5), dict(type='MultiStepLR', by_epoch=True,  begin=0,   end=12,  milestones=[8, 11],  gamma=0.1)  ]
             self.cfg['default_hooks']         = dict(checkpoint=dict(type='CheckpointHook',save_best='auto'))
+            self.cfg['metainfo']              = {'classes': CLASSES,'palette': self.colors(size=len(CLASSES)}
+            self.cfg.CLASSES                  = CLASSES
 
         except ValueError as error:
             print(error)
@@ -144,11 +158,13 @@ class Training(object):
     def download_models(self):
         try:
             configs =[
-                    'rtmdet_tiny_8xb32-300e_coco',
+                    #'rtmdet_tiny_8xb32-300e_coco',
                     'cornernet_hourglass104_8xb6-210e-mstest_coco',
-                    'ssd300_coco',
+                    #'ssd300_coco',
                     'paa_r50_fpn_1x_coco',
-                    'tridentnet_r50-caffe_1x_coco'
+                    #'tridentnet_r50-caffe_1x_coco',
+                    #'detr_r50_8xb2-150e_coco',# https://github.com/open-mmlab/mmdetection/tree/main/configs/detr
+                    
                 ]
             for config in configs:
                 print(config)
@@ -229,35 +245,55 @@ class Training(object):
         except ValueError as error:
             print(error)
             
-    def draw_rectangle(self, elements, img, color=(255,0,0)):
+    def draw_rectangle(self, elements, img, color=(255,0,0),default=False):
         try:
             bbox  = [int(x) for x in elements.get('bbox')]
             print(bbox)
-            bbox2 = [bbox[0] + bbox[2], bbox[1] + bbox[3]]
-            return cv2.rectangle(img, bbox[:2], bbox2, color, thickness=1)
+            if default == True:
+                bbox2 = [bbox[0] + bbox[2], bbox[1] + bbox[3]]
+            else:
+                bbox2 = [bbox[2],  bbox[3]]
+                
+            return cv2.rectangle(img, bbox[:2], bbox2, color, thickness=2)
         except ValueError as error:
             print(error)
             
-    def testing(self, path, checkpoint, config='rtmdet_tiny_8xb32-300e_coco.py'):
+    def testing(self, path, checkpoint, config='rtmdet_tiny_8xb32-300e_coco.py''):
         try:
-            files = self.get_files(path)
-            test  = files.get('test')
-            model = init_detector(config, checkpoint, device=DEVICE)
+            files     = self.get_files(path)
+            test      = files.get('test')
+            model     = init_detector(config, checkpoint, device=DEVICE)
             tp_all    = 0              # This variable is responsable for counting true positive from all images
             fp_all    = 0              # This variable is responsable for counting false positive from all images
             all_imgs  = 0              # This variable is responsable for counting all images 
 
             for key in test:           # All folders 
-                p_test    = self.create_path(DATA_ROOT , 'filesJSON', test.get(key))
+                p_test    = os.path.join(os.path.join(DATA_ROOT , 'filesJSON'), test.get(key))
                 coco      = COCO(p_test)
                 image_ids = coco.getImgIds()
-                print(p_test)
+
+                # Um problema de utilizar o config é que não necessariamente estará no diretório works_dir
+                # Lembrar de mudar o local_save
+                name  = (test.get(key)).split('test')[0]
+                local_save = os.path.join(os.path.dirname(checkpoint), name)
+                print(local_save) 
+                if os.path.exists( local_save ):
+                    os.mkdir( local )
                 
                 for id in image_ids:       # All images in k-folder
                     image_info = coco.loadImgs(id)
                     #print(image_info)
+                    print(coco.cats)
+                    
+                    # Segundo o mmdetection a ordem das classes no .json deve ser a mesma que a classes
+                    cl = {}
+                    for d in coco.cats:
+                        na = d.get('name')
+                        cl[ d.get('id') ] = CLASSES.index( na )
+
+                    print(cl)
                     name_img       = image_info[0].get('file_name')
-                    img            = mmcv.imread( self.create_path(DATA_ROOT,'/all/train' , name_img))
+                    img            = mmcv.imread( os.path.join(os.path.join(DATA_ROOT,'all/train') , name_img))
                     annotations    = coco.loadAnns( coco.getAnnIds(imgIds=id) )
                     bboxes_gt      = []
                     tp_img         = 0     # This variable is responsable for counting true positive from one image
@@ -268,16 +304,17 @@ class Training(object):
                     all_img = len(annotations)
                     for annotation in annotations:
                         #print(annotation.get('category_id'))
-                        #print(annotation.get('bbox'))
                         #This line abouve is responsable for show results
-                        img  = self.draw_rectangle(annotation, img)
-                        bboxes_gt.append({'class':annotation.get('category_id'), 'score':0, 'bbox':annotation.get('bbox')})
+                        img  = self.draw_rectangle(annotation, img, default=True)
+                        bboxes_gt.append({'class':cl.get( annotation.get('category_id')), 'score':0, 'bbox':annotation.get('bbox')})
 
                     #Realize the prediction of image
                     result = inference_detector(model, img)
+                    print(result)
+                    exit(1)
                     #Lets getting all boxes with value equal or more than THRESHOLD of Classification. 
                     bboxes_pred = self.processing_predicts(result.pred_instances.scores.cpu().numpy(), result.pred_instances.bboxes.cpu().numpy(), result.pred_instances.labels.cpu().numpy())
-                    print(bboxes_pred)
+                    #print(bboxes_pred)
 
                     #This line is responsable for walking for all bbox predicted
                     for bbox_gt in bboxes_gt:
@@ -288,7 +325,7 @@ class Training(object):
                                 tp_img += 1
                                 img  = self.draw_rectangle(bbox, img ,color=(0,255,0))
                                 print(' **** Hit in this moments ***')
-                                exit(1)
+                                #exit(1)
                             else:
                                 print('The box is in same local. But class is different.')
                                 img  = self.draw_rectangle(bbox, img ,color=(0,255,255))
@@ -299,8 +336,10 @@ class Training(object):
                             
                     for pred in bboxes_pred:
                         img  = self.draw_rectangle(pred, img ,color=(0,0,255))
-
-                    cv2.imwrite( self.create_path('res' , name_img),img)
+                        
+                    #This line is responsable for saving in k-folder-test
+                    cv2.imwrite( os.path.join(local_save, name_img),img)
+                    
                     tp_all   += tp_img
                     fp_all   += fp_img
                     all_imgs += all_img
@@ -324,9 +363,9 @@ class Training(object):
 
                 print(p_train)
                 service = Service(config, train=p_train, val=p_val,test=p_test)
-                if i == 2:
-                    print('Remember of eraser lines 303-305 after testing this code!!!')
-                    exit(1)
+                #if i == 2:
+                #    print('Remember of eraser lines 303-305 after testing this code!!!')
+                #    exit(1)
                 #print('To Processing all. You must eraser the line 294.')
                 #exit(1)
         except ValueError as error:
@@ -338,6 +377,10 @@ if __name__ == '__main__':
     train = Training()
     #train.download_models()
     
-    train.running('../dataset/filesJSON', config='cornernet_hourglass104_10xb5-crop511-210e-mstest_coco.py')
-    #train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/epoch_24.pth')
+    train.running('../dataset/filesJSON', config='ssd300_coco.py')
+    train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/best_coco_bbox_mAP_epoch_5.pth')
+
+    #train.running('../dataset/filesJSON', config='paa_r50_fpn_1x_coco.py')
+    #train.testing('../dataset/filesJSON', config='work_dirs/rtmdet_tiny_8xb32-300e_coco/rtmdet_tiny_8xb32-300e_coco.py' ,checkpoint='work_dirs/rtmdet_tiny_8xb32-300e_coco/best_coco_bbox_mAP_epoch_20.pth')
+    
     print('ok')
