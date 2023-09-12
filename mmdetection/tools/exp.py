@@ -1,4 +1,4 @@
-    # Copyright (c) OpenMMLab. All rights reserved.
+# Copyright (c) OpenMMLab. All rights reserved.
 import argparse
 import logging
 import os
@@ -15,6 +15,7 @@ from mmdet.apis import init_detector, inference_detector
 from pycocotools.coco import COCO
 import mmcv
 import cv2
+import random
 
 # Lembre que a ordem das classes deve ser a mesma que está no arquivo .json
 
@@ -29,6 +30,7 @@ THRESHOLD          = 0.2
 THRESHOLD_CLASSIFY = 0.3
 DEVICE             = 'cuda:0'
 DATASET_TYPE       = 'CocoDataset'
+MAX_IMG_SAVE       = 10
 
 class Service(object):
 
@@ -147,7 +149,7 @@ class Service(object):
             self.cfg['val_cfg']               = dict(type='ValLoop')
             self.cfg['param_scheduler']       = [dict(type='LinearLR', start_factor=0.001,by_epoch=False,begin=0,end=5), dict(type='MultiStepLR', by_epoch=True,  begin=0,   end=12,  milestones=[8, 11],  gamma=0.1)  ]
             self.cfg['default_hooks']         = dict(checkpoint=dict(type='CheckpointHook',save_best='auto'))
-            self.cfg['metainfo']              = {'classes': CLASSES,'palette': self.colors(size=len(CLASSES)}
+            self.cfg['metainfo']              = {'classes': CLASSES,'palette': self.colors(size=len(CLASSES))}
             self.cfg.CLASSES                  = CLASSES
 
         except ValueError as error:
@@ -258,7 +260,7 @@ class Training(object):
         except ValueError as error:
             print(error)
             
-    def testing(self, path, checkpoint, config='rtmdet_tiny_8xb32-300e_coco.py''):
+    def testing(self, path, checkpoint, config='rtmdet_tiny_8xb32-300e_coco.py'):
         try:
             files     = self.get_files(path)
             test      = files.get('test')
@@ -268,30 +270,29 @@ class Training(object):
             all_imgs  = 0              # This variable is responsable for counting all images 
 
             for key in test:           # All folders 
-                p_test    = os.path.join(os.path.join(DATA_ROOT , 'filesJSON'), test.get(key))
-                coco      = COCO(p_test)
-                image_ids = coco.getImgIds()
-
+                p_test      = os.path.join(os.path.join(DATA_ROOT , 'filesJSON'), test.get(key))
+                coco        = COCO(p_test)
+                image_ids   = coco.getImgIds()
+                count_image = 0
                 # Um problema de utilizar o config é que não necessariamente estará no diretório works_dir
                 # Lembrar de mudar o local_save
                 name  = (test.get(key)).split('test')[0]
                 local_save = os.path.join(os.path.dirname(checkpoint), name)
                 print(local_save) 
-                if os.path.exists( local_save ):
-                    os.mkdir( local )
+                if not os.path.exists( local_save ):
+                    os.mkdir( local_save )
                 
                 for id in image_ids:       # All images in k-folder
                     image_info = coco.loadImgs(id)
-                    #print(image_info)
-                    print(coco.cats)
+                    print(dir(coco))
+                    #print(coco.cats)
                     
                     # Segundo o mmdetection a ordem das classes no .json deve ser a mesma que a classes
                     cl = {}
-                    for d in coco.cats:
+                    for d in coco.cats.values():
                         na = d.get('name')
                         cl[ d.get('id') ] = CLASSES.index( na )
-
-                    print(cl)
+                    
                     name_img       = image_info[0].get('file_name')
                     img            = mmcv.imread( os.path.join(os.path.join(DATA_ROOT,'all/train') , name_img))
                     annotations    = coco.loadAnns( coco.getAnnIds(imgIds=id) )
@@ -310,13 +311,13 @@ class Training(object):
 
                     #Realize the prediction of image
                     result = inference_detector(model, img)
-                    print(result)
-                    exit(1)
-                    #Lets getting all boxes with value equal or more than THRESHOLD of Classification. 
+
+                   
+                    #Getting all boxes with value equal or more than THRESHOLD of Classification. 
                     bboxes_pred = self.processing_predicts(result.pred_instances.scores.cpu().numpy(), result.pred_instances.bboxes.cpu().numpy(), result.pred_instances.labels.cpu().numpy())
                     #print(bboxes_pred)
 
-                    #This line is responsable for walking for all bbox predicted
+                    #This lines are responsable for walking for all bbox predicted
                     for bbox_gt in bboxes_gt:
                         bbox, index = self.select_more_close(bbox_gt, bboxes_pred)
                         if bbox:
@@ -338,7 +339,9 @@ class Training(object):
                         img  = self.draw_rectangle(pred, img ,color=(0,0,255))
                         
                     #This line is responsable for saving in k-folder-test
-                    cv2.imwrite( os.path.join(local_save, name_img),img)
+                    if count_image < MAX_IMG_SAVE:
+                        cv2.imwrite( os.path.join(local_save, name_img),img)
+                    count_image += 1
                     
                     tp_all   += tp_img
                     fp_all   += fp_img
@@ -377,8 +380,8 @@ if __name__ == '__main__':
     train = Training()
     #train.download_models()
     
-    train.running('../dataset/filesJSON', config='ssd300_coco.py')
-    train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/best_coco_bbox_mAP_epoch_5.pth')
+    #train.running('../dataset/filesJSON', config='ssd300_coco.py')
+    train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/best_coco_bbox_mAP_epoch_10.pth')
 
     #train.running('../dataset/filesJSON', config='paa_r50_fpn_1x_coco.py')
     #train.testing('../dataset/filesJSON', config='work_dirs/rtmdet_tiny_8xb32-300e_coco/rtmdet_tiny_8xb32-300e_coco.py' ,checkpoint='work_dirs/rtmdet_tiny_8xb32-300e_coco/best_coco_bbox_mAP_epoch_20.pth')
