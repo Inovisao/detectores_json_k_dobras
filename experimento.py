@@ -447,6 +447,11 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
   coco_dataset = CocoDataset(ann_file=ann_file, classes=cfg.classes,data_root=cfg.data_root,img_prefix=img_prefix,pipeline=cfg.train_pipeline,filter_empty_gt=False)
 
+
+  # Vai desenhar os retângulos na imagem:
+  # AZUL: Anotações feitas por humanos
+  # VERDE: Detecção feita automaticamente e que tem intersecção com uma caixa dos humanos (VP = Verdadeiro Positivo)
+  # VERMELHO: Detecção feita automaticamente mas sem intersecção com anotação (FP = Falso Positivo)
   MAX_BOX=1000
   results=[]
   medidos=[]
@@ -464,7 +469,6 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
     #modelx.show_result(imagex, resultx, score_thr=0.3, out_file=models_path + dt['file_name'])
 
 
-    #GT BBOXS VERMELHOS  GroundTruth  
     ann = coco_dataset.get_ann_info(i)
     labels = ann['labels']
     bboxes = np.insert(ann['bboxes'],4,0.91,axis=1)
@@ -478,7 +482,6 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
       ground_thruth.append({'x1':left_top[0],'x2':right_bottom[0],'y1':left_top[1],'y2':right_bottom[1],'class':labels[j]})
       imagex=cv2.rectangle(imagex, left_top, right_bottom, color_val('blue'), thickness=1)
     
-    #RESULTADOS BBOXS VERDES Prediction
     bboxes2 = []
     for j in range(len(resultx)):
       for bb in resultx[j]:
