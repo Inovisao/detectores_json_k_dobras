@@ -23,7 +23,7 @@ DATA_ROOT          = '/home/junior/Expjr/detectores_json_k_dobras/dataset/'
 CLASSES            = ('pig',)
 #CLASSES            = ('Swollen-Ears','Good_Ears',)
 BATCH_SIZE         = 2
-MAX_EPOCHS         = 10
+MAX_EPOCHS         = 5
 LEARNING_RATE      = 0.0001
 OPTMIZER           = 'SGD'
 THRESHOLD          = 0.2
@@ -100,7 +100,6 @@ class Service(object):
                     self.cfg.train_dataloader.dataset.dataset.data_prefix= dict(img='all/train/')
             else:
                 self.cfg.train_dataloader.dataset['metainfo']     = dict(classes=CLASSES)
-                #self.cfg.train_dataloader.CLASSES                 = CLASSES
                 if 'ann_file' in self.cfg.train_dataloader.dataset:
                     self.cfg.train_dataloader.dataset.ann_file    = self.create_path('filesJSON',str(train))
                 if 'data_prefix' in self.cfg.train_dataloader.dataset:
@@ -161,9 +160,9 @@ class Training(object):
         try:
             configs =[
                     #'rtmdet_tiny_8xb32-300e_coco',
-                    'cornernet_hourglass104_8xb6-210e-mstest_coco',
-                    #'ssd300_coco',
-                    'paa_r50_fpn_1x_coco',
+                    #'cornernet_hourglass104_8xb6-210e-mstest_coco',
+                    'ssd300_coco',
+                    #'paa_r50_fpn_1x_coco',
                     #'tridentnet_r50-caffe_1x_coco',
                     #'detr_r50_8xb2-150e_coco',# https://github.com/open-mmlab/mmdetection/tree/main/configs/detr
                     
@@ -247,15 +246,19 @@ class Training(object):
         except ValueError as error:
             print(error)
             
-    def draw_rectangle(self, elements, img, color=(255,0,0),default=False):
+    def draw_rectangle(self, elements, img, color=(255,0,0),default=False, classe=None):
         try:
             bbox  = [int(x) for x in elements.get('bbox')]
-            print(bbox)
+            #print(bbox)
             if default == True:
                 bbox2 = [bbox[0] + bbox[2], bbox[1] + bbox[3]]
             else:
                 bbox2 = [bbox[2],  bbox[3]]
-                
+
+            if classe is not None:
+                position = (bbox[0]+5, bbox[1]+15)
+                img = cv2.putText(img,classe, position, cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,255,0), 1, cv2.LINE_AA)
+
             return cv2.rectangle(img, bbox[:2], bbox2, color, thickness=2)
         except ValueError as error:
             print(error)
@@ -324,20 +327,21 @@ class Training(object):
                             if bbox.get('class') == bbox_gt.get('class'):
                                 print('True Positive')
                                 tp_img += 1
-                                img  = self.draw_rectangle(bbox, img ,color=(0,255,0))
-                                print(' **** Hit in this moments ***')
-                                #exit(1)
+                                img  = self.draw_rectangle(bbox, img ,color=(0,255,0),classe=CLASSES[int(bbox.get('class'))])
+                                del bboxes_pred[index] #This line remove the boxes positive, because its not be used
                             else:
                                 print('The box is in same local. But class is different.')
                                 img  = self.draw_rectangle(bbox, img ,color=(0,255,255))
-                            del bboxes_pred[index] #This line remove the boxes positive, because its not be used
                         else:
                             print('False Positive')
                             fp_img += 1
                             
                     for pred in bboxes_pred:
                         img  = self.draw_rectangle(pred, img ,color=(0,0,255))
-                        
+
+                    img = cv2.putText(img,'TP: '+str(tp_img),  (10,15), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,255,0), 1, cv2.LINE_AA)
+                    img = cv2.putText(img,'GT: '+str(all_img), (10,35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (255,0,0), 1, cv2.LINE_AA)
+
                     #This line is responsable for saving in k-folder-test
                     if count_image < MAX_IMG_SAVE:
                         cv2.imwrite( os.path.join(local_save, name_img),img)
