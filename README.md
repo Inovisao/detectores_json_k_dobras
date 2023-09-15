@@ -77,16 +77,6 @@ https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md . 
 Você encontrará as outras redes aqui (tem que baixar todas que for usar):
 https://github.com/open-mmlab/mmdetection/tree/master/configs
 
-Para baixar as redes usadas no exemplo, você pode também rodar os comandos abaixo:
-
-```
-mkdir checkpoints
-cd ./checkpoints
-curl -O https://download.openmmlab.com/mmdetection/v2.0/retinanet/retinanet_r50_fpn_1x_coco/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth
-curl -O https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth
-cd ..
-```
-
 
 ### Rodando o experimento 
 
