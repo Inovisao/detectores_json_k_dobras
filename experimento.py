@@ -19,7 +19,7 @@ APENAS_TESTA=False
 SALVAR_IMAGENS=True
 MOSTRA_NOME_CLASSE=len(CLASSES)>1
 
-# COLOCA AS CATEGORIAS NA VARIABEL CLASSE
+# COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
   data = json.load(file)
 
@@ -84,8 +84,8 @@ import cv2
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 import math
-
-
+import wget
+from url import url
 
 
 
@@ -152,7 +152,14 @@ print('Arquiteturas que serão testadas:')
 print(MODELS_CONFIG)
 REDES=[k for k in MODELS_CONFIG.keys()]
 
+if not os.path.exists(pasta_checkpoints):
+  print('\nCriando diretório checkpoints...')
+  os.makedirs('checkpoints')
 
+for a in REDES:
+  if not os.path.exists(MODELS_CONFIG[a]['checkpoint']):
+    print('\nBaixando checkpoint da', a)
+    wget.download(url[a], out=pasta_checkpoints)
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
