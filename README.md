@@ -78,6 +78,7 @@ Você encontrará as outras redes aqui (tem que baixar todas que for usar):
 https://github.com/open-mmlab/mmdetection/tree/master/configs
 
 
+
 ### Rodando o experimento 
 
 ```
