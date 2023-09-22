@@ -24,7 +24,7 @@ with open('dataset/all/train/_annotations.coco.json', 'r') as file:
   data = json.load(file)
 
   for category in data["categories"]:
-    if not category["supercategory"] == "none":
+#    if not category["supercategory"] == "none":
       CLASSES += (category["name"],)
 
 
