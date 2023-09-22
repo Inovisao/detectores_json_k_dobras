@@ -10,8 +10,8 @@ import json
 import os
 
 CLASSES=()
-DOBRAS=0
-EPOCAS=1
+DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
+EPOCAS=10
 LIMIAR_CLASSIFICADOR=0.5
 LIMIAR_IOU=0.3
 
