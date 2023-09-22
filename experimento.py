@@ -639,49 +639,33 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 #
 
 
+printToFile('ml,fold,groundtruth,predicted,TP,FP','dataset/counting.csv','w')
+printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 
-if(not APENAS_TESTA):
-  for selected_model in REDES:
-    for f in np.arange(1,DOBRAS+1):
+i = 1
+for selected_model in REDES:
+  for f in np.arange(1,DOBRAS+1):
+    if(not APENAS_TESTA):
       print('------------------------------------------------------')
-      print('-- RODANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+      print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
       print('------------------------------------------------------')
       fold = 'fold_'+str(f)
       cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
       trainModel(cfg)
 
+    # Testando a rede treinada
+    print('------------------------------------------------------')
+    print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+    print('------------------------------------------------------')
 
+    fold = 'fold_'+str(f)
+    cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
 
+    pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
+    print('Usando o modelo aprendido: ',pth)
+    resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
+    printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
 
-    
-#----------------------------------------------------------------------------
-#----------------------------------------------------------------------------
-#
-# RODA NO CONJUNTO DE TESTE
-#
-
-
-print('======================================================')
-print(' INICIANDO TESTE - INICIANDO TESTE - INICIANDO TESTE')
-print('======================================================')
-
-printToFile('ml,fold,groundtruth,predicted,TP,FP','dataset/counting.csv','w')
-
-printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
-i=1
-for selected_model in REDES:
-    for f in np.arange(1,DOBRAS+1):
-      print('------------------------------------------------------')
-      print('-- TESTANDO A REDE ',selected_model,' NA DOBRA ',f)
-      print('------------------------------------------------------')
-
-      fold = 'fold_'+str(f)
-      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-
-      pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
-      print('Usando o modelo aprendido: ',pth)
-      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
-      printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
-    i=i+1
+  i=i+1
   
 
