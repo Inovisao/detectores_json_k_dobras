@@ -185,6 +185,51 @@ g <- grid.arrange(grobs=graficos, ncol = 2)
 ggsave(paste("./dataset/counting_FOLD_1.png", sep=""),g, width = 10, height = 12)
 print(g)
 
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# Encontra as imagens com as maiores e menores diferenças na contagem
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+
+quantos <- 3
+
+dadosContagem <- read.table('./dataset/counting.csv',sep=',',header=TRUE)
+
+# Encontra as 3 maiores diferenças (coluna dif) para cada uma das
+# técnicas (coluna ml), considerando o módulo da diferença (abs(dif))
+# e ordenando em ordem decrescente
+maiores <- dadosContagem %>% group_by(ml) %>% top_n(quantos, abs(dif))
+# Copia as imagens (fileName) com as maiores diferenças de cada ténica (ml)
+# para um diretório separado dentro da pasta dataset/prediction_X onde
+# X é o nome da técnica (coluna ml sem os dois primeiros caracteres)
+for (net in nets) {
+  print(substr(net,3,100))
+  print(maiores[maiores$ml == net, ]$fileName)
+  pastaDaRede <- paste("./dataset/prediction_",substr(net,3,100),"/",sep="")
+  novaPasta <- paste("./dataset/prediction_",substr(net,3,100),"/maiores/",sep="")
+  dir.create(novaPasta, showWarnings = TRUE)
+  file.copy(paste(pastaDaRede,maiores[maiores$ml == net, ]$fileName,sep=""),novaPasta,overwrite = TRUE)
+}
+# A mesma coisa para as 3 menores diferenças
+menores <- dadosContagem %>% group_by(ml) %>% top_n(-quantos, abs(dif))
+for (net in nets) {
+  print(substr(net,3,100))
+  print(menores[menores$ml == net, ]$fileName)
+  pastaDaRede <- paste("./dataset/prediction_",substr(net,3,100),"/",sep="")
+  novaPasta <- paste("./dataset/prediction_",substr(net,3,100),"/menores/",sep="")
+  dir.create(novaPasta, showWarnings = TRUE)
+  file.copy(paste(pastaDaRede,menores[menores$ml == net, ]$fileName,sep=""),novaPasta,overwrite = TRUE)
+}
+
+
+
+
+
+
+
+
+
+
 
 # -------------------------------------------------------------------
 # -------------------------------------------------------------------
