@@ -574,7 +574,8 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
 
     results.append(resultx)
-    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos)+','+str(cont_TP)+','+str(cont_FP)+','+dt['file_name'],'dataset/counting.csv','a')
+    diferenca=objetos_preditos-objetos_medidos
+    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos)+','+str(cont_TP)+','+str(cont_FP)+','+str(diferenca)+','+dt['file_name'],'dataset/counting.csv','a')
     
   print("preditos:")  
   print(preditos) 
@@ -639,7 +640,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 #
 
 
-printToFile('ml,fold,groundtruth,predicted,TP,FP,fileName','dataset/counting.csv','w')
+printToFile('ml,fold,groundtruth,predicted,TP,FP,dif,fileName','dataset/counting.csv','w')
 printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 
 i = 1
