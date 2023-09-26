@@ -120,8 +120,8 @@ TAXA_APRENDIZAGEM=6*[0.1]
 
 MODELS_CONFIG = {
     'sabl': {
-        'config_file': 'configs/sabl/sabl_cascade_rcnn_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/sabl_cascade_rcnn_r50_fpn_1x_coco-e1748e5e.pth'
+        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
     },
     'fovea': {
         'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
@@ -637,7 +637,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 printToFile('ml,fold,groundtruth,predicted,TP,FP,dif,fileName','dataset/counting.csv','w')
 printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 
-erros = [] # variavel que armazenara o nome/erro de cada model que retornar um erro
+errors = [] # variavel que armazenara o nome/erro de cada model que retornar um erro
 
 i = 1
 for selected_model in REDES:
