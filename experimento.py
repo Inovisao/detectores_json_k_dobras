@@ -11,7 +11,7 @@ import os
 
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
-EPOCAS=10
+EPOCAS=7
 LIMIAR_CLASSIFICADOR=0.5
 LIMIAR_IOU=0.3
 
@@ -119,34 +119,26 @@ TAXA_APRENDIZAGEM=6*[0.1]
 
 
 MODELS_CONFIG = {
-    'sabl_cascade': {
+    'sabl': {
         'config_file': 'configs/sabl/sabl_cascade_rcnn_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/sabl_cascade_rcnn_r50_fpn_1x_coco-e1748e5e.pth'
     },
-    'sabl_retinanet': {
-        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
+    'fovea': {
+        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
     },
-    'yolo': {
-        'config_file': 'configs/yolo/yolov3_d53_mstrain-608_273e_coco.py',
-        'checkpoint' : pasta_checkpoints+'/yolov3_d53_mstrain-608_273e_coco_20210518_115020-a2c3acb8.pth'
+    'faster':{
+        'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
+        'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
     },
-    # 'fovea': {
-    #     'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
-    #     'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
-    # },
-    # 'faster':{
-    #     'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
-    #     'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
-    # },
-    # 'retinanet':{
-    #     'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
-    #     'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
-    # },
-    # 'atss':{
-    #     'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-    #     'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
-    # }
+    'retinanet':{
+        'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
+        'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
+    },
+    'atss':{
+        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
+        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+    }
 }
 
 
