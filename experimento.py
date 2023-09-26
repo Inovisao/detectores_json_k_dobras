@@ -24,6 +24,7 @@ with open('dataset/all/train/_annotations.coco.json', 'r') as file:
     data = json.load(file)
 
     for category in data["categories"]:
+      # if not category["supercategory"] == "none":
         CLASSES += (category["name"],)
 
 
@@ -641,8 +642,8 @@ errors = [] # variavel que armazenara o nome/erro de cada model que retornar um 
 
 i = 1
 for selected_model in REDES:
-  for f in np.arange(1,DOBRAS+1):
-    try:
+  try:
+    for f in np.arange(1,DOBRAS+1):
       if(not APENAS_TESTA):
         print('------------------------------------------------------')
         print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
@@ -663,12 +664,12 @@ for selected_model in REDES:
       print('Usando o modelo aprendido: ',pth)
       resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
       printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
-    except MemoryError:
-      print('A rede ', selected_model, ' excedeu a quantia de memoria disponivel enquanto rodava a dobra ', f)
-      errors.append({"selectedModel": selectedModel, "type": "MemoryError"})
-    except:
-      print('Erro inesperado na rede ', selected_model, ' na dobra ', f)
-      errors.append({"selectedModel": selectedModel, "type": "unknow"})
+  except MemoryError:
+    print('A rede ', selected_model, ' excedeu a quantia de memoria disponivel.')
+    errors.append({"selectedModel": selectedModel, "type": "MemoryError"})
+  except:
+    print('Erro inesperado na rede ', selected_model)
+    errors.append({"selectedModel": selectedModel, "type": "unknow"})
 
   i=i+1
 
