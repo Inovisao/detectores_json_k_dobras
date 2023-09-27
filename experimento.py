@@ -21,24 +21,19 @@ MOSTRA_NOME_CLASSE=len(CLASSES)>1
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
-  data = json.load(file)
+    data = json.load(file)
 
-  for category in data["categories"]:
-#    if not category["supercategory"] == "none":
-      CLASSES += (category["name"],)
+    for category in data["categories"]:
+      # if not category["supercategory"] == "none":
+        CLASSES += (category["name"],)
 
 
 # CONTA A QUANTIA DE DOBRAS BASEADO NO NUMERO DE ARQUIVOS
 dir_path = r'dataset/filesJSON'
-count = 0
-
-for path in os.listdir(dir_path):
-    if os.path.isfile(os.path.join(dir_path, path)):
-        count += 1
-    DOBRAS = int(count / 3)
-
+DOBRAS = int(len(os.listdir(dir_path)) / 3)
 
 print(CLASSES, DOBRAS)
+
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
@@ -128,8 +123,8 @@ MODELS_CONFIG = {
     'sabl': {
         'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
-    },    
-     'fovea': {
+    },
+    'fovea': {
         'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
         'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
     },
@@ -274,7 +269,7 @@ def setCFG(selected_model,
 # FUNÇÃO AUXILIAR PARA ESCREVER EM ARQUIVO
 #
   
-# Vai salar os resultados no arquivo dataset/results.csv
+# Vai salvar os resultados no arquivo dataset/results.csv
 def printToFile(linha='',arquivo='dataset/results.csv',modo='a'):
   original_stdout = sys.stdout # Save a reference to the original standard output
   with open(arquivo, modo) as f:
@@ -643,30 +638,48 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 printToFile('ml,fold,groundtruth,predicted,TP,FP,dif,fileName','dataset/counting.csv','w')
 printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 
+errors = [] # variavel que armazenara o nome/erro de cada model que retornar um erro
+
 i = 1
 for selected_model in REDES:
-  for f in np.arange(1,DOBRAS+1):
-    if(not APENAS_TESTA):
+  try:
+    for f in np.arange(1,DOBRAS+1):
+      if(not APENAS_TESTA):
+        print('------------------------------------------------------')
+        print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+        print('------------------------------------------------------')
+        fold = 'fold_'+str(f)
+        cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
+        trainModel(cfg)
+
+      # Testando a rede treinada
       print('------------------------------------------------------')
-      print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+      print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
       print('------------------------------------------------------')
+
       fold = 'fold_'+str(f)
       cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-      trainModel(cfg)
 
-    # Testando a rede treinada
-    print('------------------------------------------------------')
-    print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
-    print('------------------------------------------------------')
-
-    fold = 'fold_'+str(f)
-    cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-
-    pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
-    print('Usando o modelo aprendido: ',pth)
-    resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
-    printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
+      pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
+      print('Usando o modelo aprendido: ',pth)
+      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
+      printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
+  except MemoryError:
+    print('A rede ', selected_model, ' excedeu a quantia de memoria disponivel.')
+    errors.append({"selectedModel": selectedModel, "type": "MemoryError"})
+  except:
+    print('Erro inesperado na rede ', selected_model)
+    errors.append({"selectedModel": selectedModel, "type": "unknow"})
 
   i=i+1
-  
 
+
+if (len(errors)):
+  print('\n\n----------------------------------------------------------------')
+  print('-- As seguintes redes retornaram erros durante suas execuções --')
+  print('----------------------------------------------------------------')
+
+  for e in errors:
+    print('\nRede: ', e.selected_model, '\nTipo de erro: ', e.type)
+else:
+  print('\n\nTodas as redes foram executadas com sucesso!')
