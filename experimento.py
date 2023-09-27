@@ -30,9 +30,10 @@ with open('dataset/all/train/_annotations.coco.json', 'r') as file:
 
 # CONTA A QUANTIA DE DOBRAS BASEADO NO NUMERO DE ARQUIVOS
 dir_path = r'dataset/filesJSON'
-DOBRAS = int(len(os.listdir(dir_path)) / 3)
+DOBRAS = len(os.listdir(dir_path)) // 3
 
-print(CLASSES, DOBRAS)
+print('Classes detectadas: ', CLASSES)
+print('Total de Dobras:    ', DOBRAS, '\n')
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -665,21 +666,21 @@ for selected_model in REDES:
       resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
       printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
   except MemoryError:
-    print('A rede ', selected_model, ' excedeu a quantia de memoria disponivel.')
-    errors.append({"selectedModel": selectedModel, "type": "MemoryError"})
+    print('\n\nA rede ', selected_model, ' excedeu a quantia de memoria disponivel.', '\n')
+    errors.append({"selected_model": selected_model, "type": "MemoryError"})
   except:
-    print('Erro inesperado na rede ', selected_model)
-    errors.append({"selectedModel": selectedModel, "type": "unknow"})
+    print('\n\nErro inesperado na rede ', selected_model, '\n')
+    errors.append({"selected_model": selected_model, "type": "unknow"})
 
   i=i+1
 
 
 if (len(errors)):
-  print('\n\n----------------------------------------------------------------')
+  print('\n----------------------------------------------------------------')
   print('-- As seguintes redes retornaram erros durante suas execuções --')
   print('----------------------------------------------------------------')
 
   for e in errors:
-    print('\nRede: ', e.selected_model, '\nTipo de erro: ', e.type)
+    print('\nRede: ', e["selected_model"], '\nTipo de erro: ', e["type"])
 else:
   print('\n\nTodas as redes foram executadas com sucesso!')
