@@ -87,7 +87,16 @@ epochs <- 1:EPOCAS
 
 novasColunas <- tidyr::crossing(nets,folds,epochs)
 
+# Testa se epocasVal tem mais linhas que novasColunas e remove
+# as linhas adicionais
+if (nrow(epocasVal) > nrow(novasColunas)) {
+   epocasVal <- epocasVal[1:nrow(novasColunas),]
+}
+
 dadosEpocas <- cbind(novasColunas,epocasVal)
+
+# Troca o nome da coluna epocasVal por loss
+colnames(dadosEpocas)[4] <- "loss"
 write.csv(dadosEpocas,'./dataset/epocas.csv')
 
 # Pegando apenas dados da primeira dobra 
