@@ -88,9 +88,13 @@ epochs <- 1:EPOCAS
 novasColunas <- tidyr::crossing(nets,folds,epochs)
 
 # Testa se epocasVal tem mais linhas que novasColunas e remove
-# as linhas adicionais
+# as linhas adicionais 
 if (nrow(epocasVal) > nrow(novasColunas)) {
    epocasVal <- epocasVal[1:nrow(novasColunas),]
+}  
+# Pode ser menor também
+if (nrow(epocasVal) < nrow(novasColunas)) {
+   novasColunas <- novasColunas[1:nrow(epocasVal),]
 }
 
 dadosEpocas <- cbind(novasColunas,epocasVal)
