@@ -91,9 +91,7 @@ novasColunas <- tidyr::crossing(nets,folds,epochs)
 # as linhas adicionais 
 if (nrow(epocasVal) > nrow(novasColunas)) {
    epocasVal <- epocasVal[1:nrow(novasColunas),]
-}  
-# Pode ser menor também
-if (nrow(epocasVal) < nrow(novasColunas)) {
+} else if (nrow(epocasVal) < nrow(novasColunas)) {
    novasColunas <- novasColunas[1:nrow(epocasVal),]
 }
 
