@@ -331,9 +331,6 @@ def trainModel(cfg):
   datasets[0].CLASSES = cfg.classes
   datasets[1].CLASSES = cfg.classes
 
-  print(f'O que tem em dataset[0]: ',datasets[0])
-  print(f'O que tem dentro do dataset[1]: ',datasets[1])
-  input()
 
   cfg.checkpoint_config.meta = dict(
               mmdet_version=__version__ + get_git_hash()[:7],
