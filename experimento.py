@@ -11,13 +11,16 @@ import os
 
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
-EPOCAS=7
-LIMIAR_CLASSIFICADOR=0.5
-LIMIAR_IOU=0.3
+EPOCAS=5
+LIMIAR_CLASSIFICADOR=0.2
+LIMIAR_IOU=0.001
+#Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
+TAXA_APRENDIZAGEM=6*[0.001]
 
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
 MOSTRA_NOME_CLASSE=len(CLASSES)>1
+
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
@@ -32,8 +35,8 @@ with open('dataset/all/train/_annotations.coco.json', 'r') as file:
 dir_path = r'dataset/filesJSON'
 DOBRAS = len(os.listdir(dir_path)) // 3
 
-print('Classes detectadas: ', CLASSES)
-print('Total de Dobras:    ', DOBRAS, '\n')
+print("Classes: ", CLASSES)
+print("Dobras:  ", DOBRAS)
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -116,8 +119,6 @@ plt.rcParams["axes.grid"] = False
 # rede que você pode escolher)
 
 
-#Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
-TAXA_APRENDIZAGEM=6*[0.1]
 
 
 MODELS_CONFIG = {
@@ -270,7 +271,7 @@ def setCFG(selected_model,
 # FUNÇÃO AUXILIAR PARA ESCREVER EM ARQUIVO
 #
   
-# Vai salvar os resultados no arquivo dataset/results.csv
+# Vai salar os resultados no arquivo dataset/results.csv
 def printToFile(linha='',arquivo='dataset/results.csv',modo='a'):
   original_stdout = sys.stdout # Save a reference to the original standard output
   with open(arquivo, modo) as f:
@@ -622,10 +623,6 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)+','+str(precision_fold)+','+str(recall_fold)+','+str(fscore)
 
   return string_results
-  
-  
-
-
 
 
 #----------------------------------------------------------------------------
@@ -635,11 +632,10 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 # USANDO AS 5 DOBRAS 
 #
 
+errors = []
 
 printToFile('ml,fold,groundtruth,predicted,TP,FP,dif,fileName','dataset/counting.csv','w')
 printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
-
-errors = [] # variavel que armazenara o nome/erro de cada model que retornar um erro
 
 i = 1
 for selected_model in REDES:
@@ -665,15 +661,14 @@ for selected_model in REDES:
       print('Usando o modelo aprendido: ',pth)
       resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
       printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
-  except MemoryError:
+  except MemoryError as e:
     print('\n\nA rede ', selected_model, ' excedeu a quantia de memoria disponivel.', '\n')
-    errors.append({"selected_model": selected_model, "type": "MemoryError"})
-  except:
+    errors.append({"selected_model": selected_model, "type": "MemoryError", "erro": e})
+  except Exception as e:
     print('\n\nErro inesperado na rede ', selected_model, '\n')
-    errors.append({"selected_model": selected_model, "type": "unknow"})
-
+    errors.append({"selected_model": selected_model, "type": "unknow", "erro": e})
   i=i+1
-
+  
 
 if (len(errors)):
   print('\n----------------------------------------------------------------')
@@ -681,6 +676,6 @@ if (len(errors)):
   print('----------------------------------------------------------------')
 
   for e in errors:
-    print('\nRede: ', e["selected_model"], '\nTipo de erro: ', e["type"])
+    print('\nRede: ', e["selected_model"], '\nTipo de erro: ', e["type"], '\nMenssagem:\n\n', e["erro"], "\n")
 else:
   print('\n\nTodas as redes foram executadas com sucesso!')
