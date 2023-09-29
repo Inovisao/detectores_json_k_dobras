@@ -11,11 +11,11 @@ import os
 
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
-EPOCAS=5
+EPOCAS=10
 LIMIAR_CLASSIFICADOR=0.2
-LIMIAR_IOU=0.001
+LIMIAR_IOU=0.5
 #Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
-TAXA_APRENDIZAGEM=6*[0.001]
+TAXA_APRENDIZAGEM=5*[0.001]
 
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
@@ -25,10 +25,14 @@ MOSTRA_NOME_CLASSE=len(CLASSES)>1
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
     data = json.load(file)
-
+    ann_ids = []
+    for anotation in data["annotations"]:
+      if anotation["category_id"] not in ann_ids:
+        ann_ids.append(anotation["category_id"])
+    
     for category in data["categories"]:
-      # if not category["supercategory"] == "none":
-        CLASSES += (category["name"],)
+        if category["id"] in ann_ids:
+          CLASSES += (category["name"],)
 
 
 # CONTA A QUANTIA DE DOBRAS BASEADO NO NUMERO DE ARQUIVOS
@@ -662,12 +666,17 @@ for selected_model in REDES:
       print('Usando o modelo aprendido: ',pth)
       resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
       printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
-  except MemoryError as e:
-    print('\n\nA rede ', selected_model, ' excedeu a quantia de memoria disponivel.', '\n')
-    errors.append({"selected_model": selected_model, "type": "MemoryError", "erro": e})
   except Exception as e:
-    print('\n\nErro inesperado na rede ', selected_model, '\n')
-    errors.append({"selected_model": selected_model, "type": "unknow", "erro": e})
+    tipo = type(e).__name__
+    errors.append({"selected_model": selected_model, "type": tipo, "erro_msg": e})
+
+    if (tipo == "MemoryError"):
+      print("\nFalte de memoria ao rodar a rede ", selected_model, "\n")
+    elif (tipo == "FileNotFoundError"):
+      print("\nArquivo não encontrado durante a execução da rede", selected_model, "\n")
+    else:
+      print("\nA rede", selected_model, "retornou o seguinte erro:", tipo, "\n")
+
   i=i+1
   
 
@@ -677,6 +686,12 @@ if (len(errors)):
   print('----------------------------------------------------------------')
 
   for e in errors:
-    print('\nRede: ', e["selected_model"], '\nTipo de erro: ', e["type"], '\nMenssagem:\n\n', e["erro"], "\n")
+    print("""
+  Rede:      {}.
+  Tipo:      {}.
+  Menssagem:          
+             {}
+
+""".format(e["selected_model"], e["type"], e["erro_msg"]))
 else:
   print('\n\nTodas as redes foram executadas com sucesso!')
