@@ -169,7 +169,7 @@ class Training(object):
                 ]
             for config in configs:
                 print(config)
-                os.system('mim download mmdet --config '+config+' --dest .')
+                os.system('mim download mmdet --config '+config+' --dest checkpoints/')
         except ValueError as error:
             print(error)
             
@@ -539,12 +539,12 @@ class Boxes(object):
 if __name__ == '__main__':
 
     train = Training()
-    #train.download_models()
+    train.download_models()
     
-    #train.running('../dataset/filesJSON', config='ssd300_coco.py')
-    train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/best_coco_bbox_mAP_epoch_10.pth')
+    #train.running('../dataset/filesJSON', config='checkpoints/ssd300_coco.py')
+    #train.testing('../dataset/filesJSON', config='work_dirs/ssd300_coco/ssd300_coco.py' ,checkpoint='work_dirs/ssd300_coco/best_coco_bbox_mAP_epoch_10.pth')
 
-    #train.running('../dataset/filesJSON', config='paa_r50_fpn_1x_coco.py')
+    #train.running('../dataset/filesJSON', config='checkpoints/paa_r50_fpn_1x_coco.py')
     #train.testing('../dataset/filesJSON', config='work_dirs/rtmdet_tiny_8xb32-300e_coco/rtmdet_tiny_8xb32-300e_coco.py' ,checkpoint='work_dirs/rtmdet_tiny_8xb32-300e_coco/best_coco_bbox_mAP_epoch_20.pth')
     
     print('ok')
