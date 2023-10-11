@@ -258,7 +258,7 @@ if __name__ == '__main__':
     model     = init_detector('checkpoints/ssd300_coco/ssd300_coco.py', 'checkpoints/ssd300_coco/best_coco_bbox_mAP_epoch_5.pth', device=torch.device('cuda:0'))
     testing = Testing(
         model        = model,
-        results_path = '.',
+        results_p = '.',
         prefix       = os.path.join(os.getcwd(),'../../SUINDETEC/all/train'),
         path_json    ='../../SUINDETEC/filesJSON/fold_1_test.json'
         )
