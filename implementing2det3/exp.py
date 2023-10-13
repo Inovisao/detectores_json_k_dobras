@@ -18,22 +18,23 @@ import mmcv
 import cv2
 import random
 
-from .arguments import Arguments
+from arguments import Arguments
+from experimenter import Testing
 
 # Lembre que a ordem das classes deve ser a mesma que está no arquivo .json
 
-DATA_ROOT          = '/home/junior/Expjr/detectores_json_k_dobras/dataset/'
+DATA_ROOT          = '/home/junior/Expjr/SUINDETEC'
 CLASSES            = ('pig',)
 #CLASSES            = ('Swollen-Ears','Good_Ears',)
 BATCH_SIZE         = 2
-MAX_EPOCHS         = 5
+MAX_EPOCHS         = 3
 LEARNING_RATE      = 0.0001
 OPTMIZER           = 'SGD'
 THRESHOLD          = 0.2
 THRESHOLD_CLASSIFY = 0.3
 DEVICE             = 'cuda:0'
 DATASET_TYPE       = 'CocoDataset'
-MAX_IMG_SAVE       = 10
+MAX_IMG_SAVE       = 5
 
 class Service(object):
 
@@ -52,6 +53,7 @@ class Service(object):
             self.cfg.optim_wrapper.loss_scale = 'dynamic'
             self.change_cfg(train=train,test=test,val=val, config=config, local_work_dir=local_work_dir)
 
+            
             if 'runner_type' not in self.cfg:# build the default runner
                 runner = Runner.from_cfg(self.cfg)
             else:
@@ -71,6 +73,7 @@ class Service(object):
             
     def colors(self,size):
         return [(random.randint(a=0,b=255),random.randint(a=0,b=255), random.randint(a=0,b=255)) for _ in range(size)]
+
     
     def change_cfg(self, train, test, val, config,local_work_dir):
         try:
@@ -79,14 +82,15 @@ class Service(object):
             self.cfg.total_epochs                 = MAX_EPOCHS
             self.cfg.optim_wrapper.optimizer.lr   = LEARNING_RATE
             self.cfg.optim_wrapper.optimizer.type = OPTMIZER
+            self.name_work_dir                    = config.split('.py')[0]
             
             if 'data_root' in self.cfg.train_dataloader.dataset:
                 self.cfg.train_dataloader.dataset.data_root              = DATA_ROOT
             if 'dataset' in self.cfg.train_dataloader.dataset:
                 self.cfg.train_dataloader.dataset.dataset['metainfo']    = dict(classes=CLASSES)
-                #self.cfg.train_dataloader.dataset.dataset.CLASSES        = CLASSES
                 if 'ann_file' in self.cfg.train_dataloader.dataset.dataset:
                     self.cfg.train_dataloader.dataset.dataset.ann_file   = os.path.join('filesJSON',str(train))
+                    self.cfg.train_dataloader.dataset.dataset.data_root  = DATA_ROOT
                 if 'data_prefix' in self.cfg.train_dataloader.dataset.dataset:
                     self.cfg.train_dataloader.dataset.dataset.data_prefix= dict(img='all/train/')
             else:
@@ -95,13 +99,9 @@ class Service(object):
                     self.cfg.train_dataloader.dataset.ann_file    = os.path.join('filesJSON',str(train))
                 if 'data_prefix' in self.cfg.train_dataloader.dataset:
                     self.cfg.train_dataloader.dataset.data_prefix = dict(img='all/train/')
-            #if 'metainfo' not in self.cfg.train_dataloader.dataset:
-            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
-            #else:
-            #    self.cfg.train_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
+        
 
             self.cfg.val_dataloader.batch_size = BATCH_SIZE
-            #self.cfg.val_dataloader.CLASSES  = CLASSES
             if 'data_root' in self.cfg.val_dataloader.dataset:
                 self.cfg.val_dataloader.dataset.data_root = DATA_ROOT
             if 'ann_file' in self.cfg.val_dataloader.dataset:
@@ -112,7 +112,6 @@ class Service(object):
                 self.cfg.val_dataloader.dataset['metainfo'] = dict(classes=CLASSES)
 
             self.cfg.test_dataloader.batch_size = BATCH_SIZE
-            #self.cfg.test_dataloader.CLASSES   = CLASSES
             if 'data_root' in self.cfg.test_dataloader.dataset:
                 self.cfg.test_dataloader.dataset.data_root = DATA_ROOT
             if 'ann_file' in self.cfg.test_dataloader.dataset:
@@ -127,11 +126,11 @@ class Service(object):
                 if 'mask_head' in self.cfg.model.bbox_head:
                     self.cfg.model.bbox_head.mask_head.num_classes=len(CLASSES)
 
-            name_work_dir = self.create_path(local_work_dir , config.split('.py')[0])
+            
             self.cfg.val_evaluator.ann_file   = os.path.join(DATA_ROOT , 'filesJSON' , str(val))
             self.cfg.test_evaluator.ann_file  = os.path.join(DATA_ROOT , 'filesJSON' , str(test))
             self.cfg.max_epochs               = MAX_EPOCHS
-            self.cfg.work_dir                 = os.path.join(os.getcwd(),name_work_dir)
+            self.cfg.work_dir                 = os.path.join(os.getcwd(),self.name_work_dir)
             self.cfg.num_classes              = len(CLASSES)
             self.cfg.train_batch_size_per_gpu = 2
             self.cfg.dataset_type             = DATASET_TYPE
@@ -146,23 +145,24 @@ class Service(object):
 
 class Training(object):
 
-    def download_models(self, local='checkpoints/'):
+    def download_models(self, local='checkpoints/',who='ssd300_coco'):
         try:
             configs =[
-                    #'rtmdet_tiny_8xb32-300e_coco',
-                    #'cornernet_hourglass104_8xb6-210e-mstest_coco',
+                    'rtmdet_tiny_8xb32-300e_coco',
+                    'cornernet_hourglass104_8xb6-210e-mstest_coco',
                     'ssd300_coco',
-                    #'paa_r50_fpn_1x_coco',
-                    #'tridentnet_r50-caffe_1x_coco',
+                    'paa_r50_fpn_1x_coco',
+                    'tridentnet_r50-caffe_1x_coco',
                     #'detr_r50_8xb2-150e_coco',# https://github.com/open-mmlab/mmdetection/tree/main/configs/detr
                     
                 ]
+            configs = configs if who == 'all' else [who]
             for config in configs:
                 print(config)
                 os.system('mim download mmdet --config '+config+' --dest '+local)
         except ValueError as error:
             print(error)
-            
+    
     def get_files(self,path):
         files = os.listdir(path)
         names = {'train':{},'val':{},'test':{}}
@@ -174,21 +174,39 @@ class Training(object):
                     dic.update({n[1]:file})
                     names[key] = dic
         return names
-    
 
-    def running(self, path_dataset_json,local_work_dir, config='rtmdet_tiny_8xb32-300e_coco.py'):
+
+    def running(self, path_dataset_json,checkpoints,local_work_dir, config='rtmdet_tiny_8xb32-300e_coco.py'):
         try:
             files = self.get_files(path_dataset_json)
+            path_dataset_json = path_dataset_json[:-1] if path_dataset_json[-1] == os.sep else path_dataset_json 
+            prefix = path_dataset_json.replace(path_dataset_json.split(os.sep)[-1],'')
+            
             train = files.get('train')
             test  = files.get('test')
             val   = files.get('val')
+            
             for i,key in enumerate(train):
                 p_train = train.get(key)
                 p_val   = val.get(key)
                 p_test  = test.get(key)
-                print(p_train)
-                service = Service(config, train=p_train, val=p_val,test=p_test,local_work_dir=local_work_dir)
+                service = Service(config, train=p_train, val=p_val,test=p_test, local_work_dir=checkpoints)
                 
+                name    = service.name_work_dir.split(os.sep)[-1]
+                config_train = os.path.join(service.name_work_dir,name+'.py')
+                model_train  = os.path.join(service.name_work_dir,'best_coco_bbox_mAP_epoch_'+str(MAX_EPOCHS)+'.pth')
+
+               
+                model   = init_detector(config_train, model_train, device=torch.device('cuda:0'))
+                testing = Testing(
+                    model        = model,
+                    results_p    = local_work_dir,
+                    prefix       = os.path.join(prefix,'all/train'),
+                    path_json    = os.path.join(prefix,'filesJSON',p_test),
+                    technique    = name.split('_')[0],
+                )
+                testing.running()
+                exit(1)
         except ValueError as error:
             print(error)
 
@@ -197,70 +215,49 @@ class Training(object):
 
 if __name__ == '__main__':
 
-    train = Training()
-    arguments = Arguments(
-        {
-            't':{
-                'name':'training',
-                'default':None,
-                'help': 'This options is responsable for training'
-            },
-
+    train  = Training()
+    values = {
+            
             'b':{
                 'name':'download',
                 'default':None,
-                'help': 'This option is responsable for download of model for training'
+                'help': 'This option is responsable for download of model for training. all for download all'
             },
 
             'r':{
                 'name':'local',
-                'default':None,
+                'default':'.',
                 'help': 'This option is responsable define local where saving all operations'
             },
 
             'm':{
                 'name':'model',
-                'default':'ssd300_coco.py',
+                'default':'../checkpoints/ssd300_coco.py',
                 'help': 'This option is responsable for download of model for training'
             },
 
             'd':{
                 'name':'dataset',
-                'default':'../dataset/filesJSON/',
+                'default':'../../SUINDETEC/filesJSON/',
                 'help': 'This option is responsable define local os dataset'
             },
 
+            'c':{
+                'name':'checkpoints',
+                'default':'../checkpoints',
+                'help': 'This option is responsable define local checkpoints'
+            },
+
         }
-    )
+    arguments = Arguments(values)
     arg   = arguments.get()  # Get the parsed arguments.
     local = arg['local'] if arg['local'] is not None else os.getcwd()
 
-    if arg['training'] == arg['download'] == None:
-        args = arg.get()
-        print('\nArguments incorrets. Please, use this options: ')
-        for keys in args.keys():
-            print('\t -'+str(keys),' for: '+args[keys]['help'])
-
+    
+    if arg['download'] is not None:
+        if not os.path.exists(arg['checkpoints']):
+            os.mkdir(arg['checkpoints'])
+        train.download_models(local=arg['checkpoints'],who=arg['download'])
     else:
-        if arg['download'] is not None:
-            checkpoints = os.path.join(local,'checkpoints')
-            if not os.path.exists(checkpoints):
-                os.mkdir(checkpoints)
-            train.download_models(local=checkpoints)
-    
-        if arg['training'] != 0:
-            train.running(path_dataset_json=arg['dataset'],local_work_dir='.',config='ssd300_coco.py')
-
-
-
-
-
-    
-    #train.running('../dataset/filesJSON',local_work_dir='work_dirs', config='checkpoints/ssd300_coco.py')
-    
-
-    #train.running('../dataset/filesJSON', config='checkpoints/paa_r50_fpn_1x_coco.py')
-    #train.testing('../dataset/filesJSON', config='work_dirs/rtmdet_tiny_8xb32-300e_coco/rtmdet_tiny_8xb32-300e_coco.py' ,checkpoint='work_dirs/rtmdet_tiny_8xb32-300e_coco/best_coco_bbox_mAP_epoch_20.pth')
-    
-
+        train.running(path_dataset_json=arg['dataset'],checkpoints=arg['checkpoints'],local_work_dir=arg['local'],config=arg['model'])
     print('ok')
