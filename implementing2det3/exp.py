@@ -22,7 +22,6 @@ from arguments import Arguments
 from experimenter import Testing
 
 # Lembre que a ordem das classes deve ser a mesma que está no arquivo .json
-
 DATA_ROOT          = '/home/junior/Expjr/SUINDETEC'
 CLASSES            = ('pig',)
 #CLASSES            = ('Swollen-Ears','Good_Ears',)
@@ -206,7 +205,6 @@ class Training(object):
                     technique    = name.split('_')[0],
                 )
                 testing.running()
-                exit(1)
         except ValueError as error:
             print(error)
 
