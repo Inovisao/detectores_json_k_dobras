@@ -129,7 +129,7 @@ class Boxes(object):
 
 class Testing(object):
 
-    def __init__(self, model,path_json,results_p,prefix,technique='ssd',threshold=0.3, threshold_class=0.3, device='cuda:0'):
+    def __init__(self, model,path_json,results_p,prefix,technique='ssd',threshold=0.3, threshold_class=0.4, device='cuda:0'):
         try:
             self.model = model
             assert os.path.exists(path_json), 'This file not exists!'
@@ -211,9 +211,9 @@ class Testing(object):
                 }
                 if qt_show > 0:
                     bxs =[[bx,labels[i],round(scores[i],2)] for i,bx in enumerate(boxes)]
-                    img = self.boxes_draw.draw_rectangle(bboxes=boxes_fp, img=img,dim=(640,640),color=(0,0,255), classes=classes)
-                    img = self.boxes_draw.draw_rectangle(bboxes=b_gt, img=img,dim=(640,640),color=(255,0,0))
-                    img = self.boxes_draw.draw_rectangle(bboxes=bxs, img=img,dim=(640,640), classes=classes)
+                    img = self.boxes_draw.draw_rectangle(bboxes=boxes_fp, img=img,dim=size,color=(0,0,255), classes=classes)
+                    img = self.boxes_draw.draw_rectangle(bboxes=b_gt, img=img,dim=size,color=(255,0,0))
+                    img = self.boxes_draw.draw_rectangle(bboxes=bxs, img=img,dim=size, classes=classes)
                     img = self.boxes_draw.draw_text(img, 'A..:'+str(len(b_gt)), (10,15), color=(255,0,0))
                     img = self.boxes_draw.draw_text(img, 'Tp..:'+str(len(bxs)), (10,35), color=(0,255,0))
                     img = self.boxes_draw.draw_text(img, 'Fp..:'+str(len(boxes_fp)), (10,55), color=(0,0,255))
