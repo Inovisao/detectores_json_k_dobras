@@ -206,12 +206,12 @@ class Training(object):
                 p_test  = test.get(key)
                 service = Service(config, train=p_train, val=p_val,test=p_test, local_work_dir=checkpoints)
                 
-                name    = service.name_work_dir.split(os.sep)[-1]
+                name         = service.name_work_dir.split(os.sep)[-1]
                 config_train = os.path.join(service.name_work_dir,name+'.py')
                 model_train  = os.path.join(service.name_work_dir,'best_coco_bbox_mAP_epoch_'+str(MAX_EPOCHS)+'.pth')
 
                
-                self.testing(p_test,checkpoints=model_train, config=config_train, local_work_dir=local_work_dir, prefix=prefix, name=name.split('_')[0])
+                self.testing(list([p_test]),checkpoints=model_train, config=config_train, local_work_dir=local_work_dir, prefix=prefix, name=name.split('_')[0])
 
         except ValueError as error:
             print(error)
@@ -221,6 +221,11 @@ class Training(object):
 
 if __name__ == '__main__':
 
+    """Make testing example:
+
+        python exp.py  -t 0 -p ../checkpoints/ssd300_coco/best_coco_bbox_mAP_epoch_10.pth -m ../checkpoints/ssd300_coco/ssd300_coco.py 
+
+    """
     train  = Training()
     values = {
             
@@ -284,8 +289,7 @@ if __name__ == '__main__':
         prefix            = path_dataset_json.replace(path_dataset_json.split(os.sep)[-1],'')
         tests_f           = files.get('test')
 
-        for key in tests_f:
-            train.testing(tests_f.get(key),checkpoints=arg['.pth'], config=arg['model'], local_work_dir=arg['local'], prefix=prefix, name=(arg['.pth']).split(os.sep)[-2])
+        train.testing(list(tests_f.values()),checkpoints=arg['.pth'], config=arg['model'], local_work_dir=arg['local'], prefix=prefix, name=(arg['.pth']).split(os.sep)[-2])
     
     else:
         
