@@ -174,6 +174,21 @@ class Training(object):
                     names[key] = dic
         return names
 
+    def testing(self, test_files,checkpoints, config, local_work_dir, prefix, name):
+        try:
+            model = init_detector(config, checkpoints, device=torch.device(DEVICE))
+            for p_test in test_files: 
+                t = Testing(
+                    model        = model,
+                    results_p    = local_work_dir,
+                    prefix       = os.path.join(prefix,'all/train'),
+                    path_json    = os.path.join(prefix,'filesJSON',p_test),
+                    technique    = name,
+                )
+                t.running()
+
+        except ValueError as error:
+            print(error)
 
     def running(self, path_dataset_json,checkpoints,local_work_dir, config='rtmdet_tiny_8xb32-300e_coco.py'):
         try:
@@ -196,15 +211,8 @@ class Training(object):
                 model_train  = os.path.join(service.name_work_dir,'best_coco_bbox_mAP_epoch_'+str(MAX_EPOCHS)+'.pth')
 
                
-                model   = init_detector(config_train, model_train, device=torch.device('cuda:0'))
-                testing = Testing(
-                    model        = model,
-                    results_p    = local_work_dir,
-                    prefix       = os.path.join(prefix,'all/train'),
-                    path_json    = os.path.join(prefix,'filesJSON',p_test),
-                    technique    = name.split('_')[0],
-                )
-                testing.running()
+                self.testing(p_test,checkpoints=model_train, config=config_train, local_work_dir=local_work_dir, prefix=prefix, name=name.split('_')[0])
+
         except ValueError as error:
             print(error)
 
@@ -220,6 +228,12 @@ if __name__ == '__main__':
                 'name':'download',
                 'default':None,
                 'help': 'This option is responsable for download of model for training. all for download all'
+            },
+
+            't':{
+                'name': 'testing',
+                'default': None,
+                'help': 'This option is responsable for execute only testing'
             },
 
             'r':{
@@ -246,6 +260,12 @@ if __name__ == '__main__':
                 'help': 'This option is responsable define local checkpoints'
             },
 
+            'p':{
+                'name':'.pth',
+                'default':'.',
+                'help': 'This option is responsable define local of model trainning'
+            },
+
         }
     arguments = Arguments(values)
     arg   = arguments.get()  # Get the parsed arguments.
@@ -256,6 +276,18 @@ if __name__ == '__main__':
         if not os.path.exists(arg['checkpoints']):
             os.mkdir(arg['checkpoints'])
         train.download_models(local=arg['checkpoints'],who=arg['download'])
+
+    elif arg['testing'] is not None:
+        path_dataset_json = arg['dataset']
+        files             = train.get_files(path_dataset_json)
+        path_dataset_json = path_dataset_json[:-1] if path_dataset_json[-1] == os.sep else path_dataset_json 
+        prefix            = path_dataset_json.replace(path_dataset_json.split(os.sep)[-1],'')
+        tests_f           = files.get('test')
+
+        for key in tests_f:
+            train.testing(tests_f.get(key),checkpoints=arg['.pth'], config=arg['model'], local_work_dir=arg['local'], prefix=prefix, name=(arg['.pth']).split(os.sep)[-2])
+    
     else:
+        
         train.running(path_dataset_json=arg['dataset'],checkpoints=arg['checkpoints'],local_work_dir=arg['local'],config=arg['model'])
     print('ok')
