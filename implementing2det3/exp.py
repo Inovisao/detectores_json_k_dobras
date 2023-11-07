@@ -185,7 +185,7 @@ class Training(object):
                     path_json    = os.path.join(prefix,'filesJSON',p_test),
                     technique    = name,
                 )
-                t.running()
+                t.running(classes=CLASSES)
 
         except ValueError as error:
             print(error)
@@ -206,12 +206,12 @@ class Training(object):
                 p_test  = test.get(key)
                 service = Service(config, train=p_train, val=p_val,test=p_test, local_work_dir=checkpoints)
                 
-                #name         = service.name_work_dir.split(os.sep)[-1]
-                #config_train = os.path.join(service.name_work_dir,name+'.py')
-                #model_train  = os.path.join(service.name_work_dir,'best_coco_bbox_mAP_epoch_'+str(MAX_EPOCHS)+'.pth')
+                name         = service.name_work_dir.split(os.sep)[-1]
+                config_train = os.path.join(service.name_work_dir,name+'.py')
+                model_train  = os.path.join(service.name_work_dir,'best_coco_bbox_mAP_epoch_'+str(MAX_EPOCHS)+'.pth')
 
                
-               # self.testing(list([p_test]),checkpoints=model_train, config=config_train, local_work_dir=local_work_dir, prefix=prefix, name=name.split('_')[0])
+                self.testing(list([p_test]),checkpoints=model_train, config=config_train, local_work_dir=local_work_dir, prefix=prefix, name=name.split('_')[0])
 
         except ValueError as error:
             print(error)
