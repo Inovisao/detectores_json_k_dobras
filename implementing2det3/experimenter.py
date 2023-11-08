@@ -65,7 +65,10 @@ class ExtractCoco(object):
                 areas.append( annotation.get('area') )
             boxes    = torch.FloatTensor(boxes)
             labels   = torch.as_tensor(labels, dtype=torch.int64)
-            image_id = torch.as_tensor([annotations[0].get('image_id')],dtype=torch.int64)
+            if len(annotations) >= 1:
+                image_id = torch.as_tensor([annotations[0].get('image_id')],dtype=torch.int64)
+            else:
+                image_id = torch.as_tensor([0],dtype=torch.int64)
             areas    = torch.Tensor(areas)
             iscrowd  = torch.zeros((len(annotations),), dtype=torch.uint8)
             masks    = None
