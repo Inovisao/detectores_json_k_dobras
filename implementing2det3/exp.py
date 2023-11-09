@@ -184,6 +184,7 @@ class Training(object):
                     prefix       = os.path.join(prefix,'all/train'),
                     path_json    = os.path.join(prefix,'filesJSON',p_test),
                     technique    = name,
+                    device       = DEVICE
                 )
                 t.running(classes=CLASSES)
 
