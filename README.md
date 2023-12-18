@@ -60,16 +60,13 @@ conda activate detectores # Leia antes o arquivo install.sh para criar o ambient
 python geraDobras.py -folds=5 -valperc=0.3  # Gera as dobras para a validação cruzada 
 ```
 
-- Troque dentro do arquivo experimento.py, nas linhas 10 e 11, o nome da classe que você usou para anotar suas imagens (no lugar de **eucaliptos**) e o número de dobras, caso não tenha utilizado 5
-
 - Na pasta ./utils existem alguns outros scripts que podem ser úteis em algumas situações. É preciso estudá-los antes de usá-los para não bagunçar seus dados.
-
 
 
 ### Escolhendo as arquiteturas a serem testadas
 # 
 
-Procure no arquivo experimento.py o lugar onde criamos a variável **MODELS_CONFIG** e leia com atenção as orientações. É preciso baixar os arquivos .pth das redes que serão utilizadas e colocar dentro da pasta ./checkpoints. Estes arquivos estão disponíveis no site do mmdetection e no repositório do Inovisão (acesso restrito - no link dos bancos de imagens - aba Links da planilhona). 
+Procure no arquivo experimento.py o lugar onde criamos a variável **MODELS_CONFIG** (linha 116) e leia com atenção as orientações. Caso ocorra algum erro durante a instalação automatica dos arquivos .pth, é preciso baixalos manualmente e acrescentalos na pasta checkpoints. Estes arquivos estão disponíveis no site do mmdetection e no repositório do Inovisão (acesso restrito - no link dos bancos de imagens - aba Links da planilhona). 
 
 Os arquivos .pth para a rede vfnet, por exemplo, podem ser encontrados no link:
 https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md . Dentro este site procure por um link chamado 'model' (podem ter vários, para as várias versões da rede que você pode escolher).

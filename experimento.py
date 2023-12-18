@@ -11,16 +11,16 @@ import os
 
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
-EPOCAS=12
+EPOCAS=3
 LIMIAR_CLASSIFICADOR=0.5
-LIMIAR_IOU=0.6
+LIMIAR_IOU=0.5
 # Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
 TAXA_APRENDIZAGEM=5*[0.001]
 
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
 
-IGNORAR_ERROS=False # Desative para debugar
+IGNORAR_ERROS=True # Desative para debugar
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
@@ -62,7 +62,6 @@ import sys
 print('python: ',sys.version)
 
 
-
 from mmcv import Config
 import os
 import sys
@@ -91,8 +90,6 @@ import math
 import wget
 from url import url
 
-
-
 sys.path.append('mmdetection')
 
 pasta_mmdetection=os.path.join(os.getcwd(),'mmdetection')
@@ -104,15 +101,14 @@ print('Pasta com os checkpoints (*.pth): ',pasta_checkpoints)
 
 plt.rcParams["axes.grid"] = False
 
-
-
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
 # DEFINE AS REDES QUE SERÃO USADAS
 #
-# Se for usar alguma rede diferente das que já estão em MODELS_CONFIG 
-# baixo é preciso ir no arquivo models_dict, e procurar pela rede que deseja.
+# Se for usar alguma rede diferente das que já estão em MODELS_CONFIG é preciso ir no arquivo models_dict,
+# e procurar pela rede que deseja, em seguida fazer similar ao que ja existe, mas modificando para o caminho da sua rede
+# referente ao dicionario
 
 from models_dict import models_dict
 
@@ -124,17 +120,24 @@ MODELS_CONFIG = {
   'atss': models_dict["atss"]["atss_r50_fpn_1x_coco"],
 }
 
+# caso a quantia de redes seja maior do que a quantia de taxas de aprendizagem, adiciona mais taxas com o valor padrão de .001
+for _ in range(len(MODELS_CONFIG) - len(TAXA_APRENDIZAGEM)):
+  TAXA_APRENDIZAGEM.append(0.001)
+
 # cria pasta checkpoints
 if not os.path.exists(pasta_checkpoints):
   print('\nCriando diretório checkpoints...')
   os.makedirs('checkpoints')
 
-# baixa os modelos
+# baixa os modelos automaticamente
 for model in MODELS_CONFIG:
   download_url = MODELS_CONFIG[model]["model_download"]
 
-  if not os.path.exists(MODELS_CONFIG[model]['checkpoint']):
-    wget.download(download_url, out=pasta_checkpoints)
+  try:
+    if not os.path.exists(MODELS_CONFIG[model]['checkpoint']):
+      wget.download(download_url, out=pasta_checkpoints)
+  except:
+    pass
 
 print('Arquiteturas que serão testadas:')
 print(MODELS_CONFIG)
