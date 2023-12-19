@@ -11,29 +11,37 @@ import os
 
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
-EPOCAS=7
+EPOCAS=3
 LIMIAR_CLASSIFICADOR=0.5
-LIMIAR_IOU=0.3
+LIMIAR_IOU=0.5
+# Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
+TAXA_APRENDIZAGEM=5*[0.001]
 
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
-MOSTRA_NOME_CLASSE=len(CLASSES)>1
+
+IGNORAR_ERROS=True # Desative para debugar
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
     data = json.load(file)
-
+    ann_ids = []
+    for anotation in data["annotations"]:
+      if anotation["category_id"] not in ann_ids:
+        ann_ids.append(anotation["category_id"])
+    
     for category in data["categories"]:
-      # if not category["supercategory"] == "none":
-        CLASSES += (category["name"],)
+        if category["id"] in ann_ids:
+          CLASSES += (category["name"],)
 
+MOSTRA_NOME_CLASSE=len(CLASSES)>1
 
 # CONTA A QUANTIA DE DOBRAS BASEADO NO NUMERO DE ARQUIVOS
 dir_path = r'dataset/filesJSON'
 DOBRAS = len(os.listdir(dir_path)) // 3
 
-print('Classes detectadas: ', CLASSES)
-print('Total de Dobras:    ', DOBRAS, '\n')
+print("Classes: ", CLASSES)
+print("Dobras:  ", DOBRAS)
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -52,7 +60,6 @@ print('cuda-version: ', get_compiling_cuda_version())
 print('compiler: ', get_compiler_version())
 import sys
 print('python: ',sys.version)
-
 
 
 from mmcv import Config
@@ -83,8 +90,6 @@ import math
 import wget
 from url import url
 
-
-
 sys.path.append('mmdetection')
 
 pasta_mmdetection=os.path.join(os.getcwd(),'mmdetection')
@@ -96,66 +101,47 @@ print('Pasta com os checkpoints (*.pth): ',pasta_checkpoints)
 
 plt.rcParams["axes.grid"] = False
 
-
-
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
 #
 # DEFINE AS REDES QUE SERÃO USADAS
 #
-# Se for usar alguma rede diferente das que já estão em MODELS_CONFIG 
-# baixo é preciso retirar o comentário ou acrescentar
-# mais linhas copiando das que já existem e alterando o config_file e o checkpoint.
-#
-# É preciso também baixar o arquivo .pth no site do mmdetection e colocar dentro da
-# pasta ./checkpoints. Os arquivos .pth para rede vfnet, por exemplo, podem ser
-# encontrados no link abaixo:
-# https://github.com/open-mmlab/mmdetection/blob/master/configs/vfnet/README.md
-#
-# Dentro do site procure por um link chamado 'model' (podem ter vários, para as várias versões da
-# rede que você pode escolher)
+# Se for usar alguma rede diferente das que já estão em MODELS_CONFIG é preciso ir no arquivo models_dict,
+# e procurar pela rede que deseja, em seguida fazer similar ao que ja existe, mas modificando para o caminho da sua rede
+# referente ao dicionario
 
-
-#Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
-TAXA_APRENDIZAGEM=6*[0.1]
-
+from models_dict import models_dict
 
 MODELS_CONFIG = {
-    'sabl': {
-        'config_file': 'configs/sabl/sabl_retinanet_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/sabl_retinanet_r50_fpn_1x_coco-6c54fd4f.pth'
-    },
-    'fovea': {
-        'config_file': 'configs/foveabox/fovea_r50_fpn_4x4_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/fovea_r50_fpn_4x4_1x_coco_20200219-ee4d5303.pth'
-    },
-    'faster':{
-        'config_file': 'configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py',
-        'checkpoint': pasta_checkpoints+'/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
-    },
-    'retinanet':{
-        'config_file': 'configs/retinanet/retinanet_r50_fpn_1x_coco.py',
-        'checkpoint': pasta_checkpoints+'/retinanet_r50_fpn_1x_coco_20200130-c2398f9e.pth'
-    },
-    'atss':{
-        'config_file': 'configs/atss/atss_r50_fpn_1x_coco.py',
-        'checkpoint' : pasta_checkpoints+'/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
-    }
+  'sabl': models_dict["sabl"]["sabl_retinanet_r50_fpn_1x_coco"],
+  'fovea': models_dict["foveabox"]["fovea_r50_fpn_4x4_1x_coco"],
+  'faster': models_dict["faster_rcnn"]["faster_rcnn_r50_fpn_1x_coco"],
+  'retinanet': models_dict["retinanet"]["retinanet_r50_fpn_1x_coco"],
+  'atss': models_dict["atss"]["atss_r50_fpn_1x_coco"],
 }
 
+# caso a quantia de redes seja maior do que a quantia de taxas de aprendizagem, adiciona mais taxas com o valor padrão de .001
+for _ in range(len(MODELS_CONFIG) - len(TAXA_APRENDIZAGEM)):
+  TAXA_APRENDIZAGEM.append(0.001)
 
-print('Arquiteturas que serão testadas:')
-print(MODELS_CONFIG)
-REDES=[k for k in MODELS_CONFIG.keys()]
-
+# cria pasta checkpoints
 if not os.path.exists(pasta_checkpoints):
   print('\nCriando diretório checkpoints...')
   os.makedirs('checkpoints')
 
-for a in REDES:
-  if not os.path.exists(MODELS_CONFIG[a]['checkpoint']):
-    print('\nBaixando checkpoint da', a)
-    wget.download(url[a], out=pasta_checkpoints)
+# baixa os modelos automaticamente
+for model in MODELS_CONFIG:
+  download_url = MODELS_CONFIG[model]["model_download"]
+
+  try:
+    if not os.path.exists(MODELS_CONFIG[model]['checkpoint']):
+      wget.download(download_url, out=pasta_checkpoints)
+  except:
+    pass
+
+print('Arquiteturas que serão testadas:')
+print(MODELS_CONFIG)
+REDES=[k for k in MODELS_CONFIG.keys()]
 
 #----------------------------------------------------------------------------
 #----------------------------------------------------------------------------
@@ -270,7 +256,7 @@ def setCFG(selected_model,
 # FUNÇÃO AUXILIAR PARA ESCREVER EM ARQUIVO
 #
   
-# Vai salvar os resultados no arquivo dataset/results.csv
+# Vai salar os resultados no arquivo dataset/results.csv
 def printToFile(linha='',arquivo='dataset/results.csv',modo='a'):
   original_stdout = sys.stdout # Save a reference to the original standard output
   with open(arquivo, modo) as f:
@@ -329,6 +315,7 @@ def trainModel(cfg):
 
   datasets[0].CLASSES = cfg.classes
   datasets[1].CLASSES = cfg.classes
+
 
   cfg.checkpoint_config.meta = dict(
               mmdet_version=__version__ + get_git_hash()[:7],
@@ -428,7 +415,7 @@ def is_max_score_thr(bb1, pred_array):
 #
 # FUNÇÃO QUE APLICA O MODELO APRENDIDO NOS DADOS DE TESTE
 #
-def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_imgs=False,num_model=1,fold='fold_1'):
+def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=True,save_imgs=False,num_model=1,fold='fold_1'):
 
   # build the model from a config file and a checkpoint file
   cfg.data.test.test_mode = True
@@ -463,14 +450,12 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   all_FP = 0
   all_GT=0
   for i,dt in enumerate(coco_dataset.data_infos):
-
     print('Processando Imagem de Teste:',dt['file_name'])
 
     imagex=None
     imagex=mmcv.imread(os.path.join(coco_dataset.img_prefix,dt['file_name']))
     resultx = inference_detector(modelx, imagex)
     #modelx.show_result(imagex, resultx, score_thr=0.3, out_file=models_path + dt['file_name'])
-
 
     ann = coco_dataset.get_ann_info(i)
     labels = ann['labels']
@@ -492,6 +477,7 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
         if is_max_score_thr(obj,resultx):
           bboxes2.append(obj)
     bboxes2 = np.array(bboxes2)
+
     # print(bboxes2)
     # print("detections: " + str(len(bboxes2)))
     # print("ground truths: " + str(len(bboxes)))
@@ -571,8 +557,9 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 
     results.append(resultx)
     diferenca=objetos_preditos-objetos_medidos
-    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos)+','+str(cont_TP)+','+str(cont_FP)+','+str(diferenca)+','+dt['file_name'],'dataset/counting.csv','a')
-    
+    printToFile(str(num_model)+'_'+selected_model + ','+fold+','+str(objetos_medidos)+','+str(objetos_preditos)+','+str(cont_TP)+','+str(cont_FP)+','+str(diferenca)+','+dt['file_name'],'dataset/counting.csv','a')  
+
+
   print("preditos:")  
   print(preditos) 
   eval_results = coco_dataset.evaluate(results, classwise=True)
@@ -622,10 +609,6 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
   string_results = str(mAP)+','+str(mAP50)+','+str(mAP75)+','+str(MAE)+','+str(RMSE)+','+str(r)+','+str(precision_fold)+','+str(recall_fold)+','+str(fscore)
 
   return string_results
-  
-  
-
-
 
 
 #----------------------------------------------------------------------------
@@ -635,45 +618,54 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=False,save_img
 # USANDO AS 5 DOBRAS 
 #
 
+errors = []
 
 printToFile('ml,fold,groundtruth,predicted,TP,FP,dif,fileName','dataset/counting.csv','w')
 printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 
-errors = [] # variavel que armazenara o nome/erro de cada model que retornar um erro
+def train_and_test(selected_model):
+  for f in np.arange(1,DOBRAS+1):
+    if(not APENAS_TESTA):
+      print('------------------------------------------------------')
+      print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+      print('------------------------------------------------------')
+      fold = 'fold_'+str(f)
+      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
+      trainModel(cfg)
+
+    # Testando a rede treinada
+    print('------------------------------------------------------')
+    print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+    print('------------------------------------------------------')
+
+    fold = 'fold_'+str(f)
+    cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
+
+    pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
+    print('Usando o modelo aprendido: ',pth)
+    resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
+    printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
 
 i = 1
 for selected_model in REDES:
-  try:
-    for f in np.arange(1,DOBRAS+1):
-      if(not APENAS_TESTA):
-        print('------------------------------------------------------')
-        print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
-        print('------------------------------------------------------')
-        fold = 'fold_'+str(f)
-        cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-        trainModel(cfg)
+  if IGNORAR_ERROS:
+    try:
+      train_and_test(selected_model)
+    except Exception as e:
+      tipo = type(e).__name__
+      errors.append({"selected_model": selected_model, "type": tipo, "erro_msg": e})
 
-      # Testando a rede treinada
-      print('------------------------------------------------------')
-      print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
-      print('------------------------------------------------------')
-
-      fold = 'fold_'+str(f)
-      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-
-      pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
-      print('Usando o modelo aprendido: ',pth)
-      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
-      printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
-  except MemoryError:
-    print('\n\nA rede ', selected_model, ' excedeu a quantia de memoria disponivel.', '\n')
-    errors.append({"selected_model": selected_model, "type": "MemoryError"})
-  except:
-    print('\n\nErro inesperado na rede ', selected_model, '\n')
-    errors.append({"selected_model": selected_model, "type": "unknow"})
+      if (tipo == "MemoryError"):
+        print("\nFalte de memoria ao rodar a rede ", selected_model, "\n")
+      elif (tipo == "FileNotFoundError"):
+        print("\nArquivo não encontrado durante a execução da rede", selected_model, "\n")
+      else:
+        print("\nA rede", selected_model, "retornou o seguinte erro:", tipo, "\n")
+  else:
+    train_and_test(selected_model)
 
   i=i+1
-
+  
 
 if (len(errors)):
   print('\n----------------------------------------------------------------')
@@ -681,6 +673,12 @@ if (len(errors)):
   print('----------------------------------------------------------------')
 
   for e in errors:
-    print('\nRede: ', e["selected_model"], '\nTipo de erro: ', e["type"])
+    print("""
+  Rede:      {}.
+  Tipo:      {}.
+  Menssagem:          
+            {}
+
+""".format(e["selected_model"], e["type"], e["erro_msg"]))
 else:
   print('\n\nTodas as redes foram executadas com sucesso!')
