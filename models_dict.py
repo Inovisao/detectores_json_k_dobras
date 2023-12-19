@@ -1,3 +1,22 @@
+# Este dicionário abrange todas as redes disponíveis no mmdetections, vinculando-as às informações necessarias para realizar o treinamento da IA.
+
+#   "config_file" -> refere-se ao nome do arquivo de configuração presente no mmdetection.
+#   "checkpoint" -> indica o caminho para a pasta de checkpoints + o nome do arquivo .pth.
+#   "model_download" -> link para o download do arquivo pth.
+
+# É importante observar que o dicionário foi gerado automaticamente, e algumas redes deram problemas durante esse processo:
+#   regnet
+#   groie
+#   cascade_rpn
+#   ld
+#   cornernet
+#   tridentnet
+#   carafe
+#   legacy_1
+#   fast_rcnn
+
+# Caso queira utilizar alguma dessas redes, é necessário adicioná-las manualmente ao dicionário, fornecendo as informações necessárias.
+
 import os
 
 pasta_checkpoints=os.path.join(os.getcwd(),'checkpoints')
