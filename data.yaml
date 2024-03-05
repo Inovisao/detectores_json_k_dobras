@@ -1,0 +1,7 @@
+names:
+- Peixes
+- Peixes
+nc: 2
+test: ../detectores_json_k_dobras-master/dataset/YOLO/test/images
+train: ../detectores_json_k_dobras-master/dataset/YOLO/train/images
+val: ../detectores_json_k_dobras-master/dataset/YOLO/valid/images

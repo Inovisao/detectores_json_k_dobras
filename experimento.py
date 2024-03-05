@@ -8,7 +8,7 @@
 # DEFINE ALGUNS HIPERPARÂMETROS
 import json
 import os
-
+import shutil
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
 EPOCAS=3
@@ -20,7 +20,7 @@ TAXA_APRENDIZAGEM=5*[0.001]
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
 
-IGNORAR_ERROS=True # Desative para debugar
+IGNORAR_ERROS=False # Desative para debugar
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
@@ -113,12 +113,15 @@ plt.rcParams["axes.grid"] = False
 from models_dict import models_dict
 
 MODELS_CONFIG = {
-  'sabl': models_dict["sabl"]["sabl_retinanet_r50_fpn_1x_coco"],
-  'fovea': models_dict["foveabox"]["fovea_r50_fpn_4x4_1x_coco"],
-  'faster': models_dict["faster_rcnn"]["faster_rcnn_r50_fpn_1x_coco"],
-  'retinanet': models_dict["retinanet"]["retinanet_r50_fpn_1x_coco"],
-  'atss': models_dict["atss"]["atss_r50_fpn_1x_coco"],
+  #'sabl': models_dict["sabl"]["sabl_retinanet_r50_fpn_1x_coco"],
+  'YOLOV8' : None
 }
+
+
+GERA_CFG = {
+  'sabl': models_dict["sabl"]["sabl_retinanet_r50_fpn_1x_coco"]
+}
+
 
 # caso a quantia de redes seja maior do que a quantia de taxas de aprendizagem, adiciona mais taxas com o valor padrão de .001
 for _ in range(len(MODELS_CONFIG) - len(TAXA_APRENDIZAGEM)):
@@ -131,7 +134,8 @@ if not os.path.exists(pasta_checkpoints):
 
 # baixa os modelos automaticamente
 for model in MODELS_CONFIG:
-  download_url = MODELS_CONFIG[model]["model_download"]
+  if model != 'YOLOV8':
+    download_url = MODELS_CONFIG[model]["model_download"]
 
   try:
     if not os.path.exists(MODELS_CONFIG[model]['checkpoint']):
@@ -155,8 +159,11 @@ def setCFG(selected_model,
            total_epochs=EPOCAS,
            learning_rate=0.01,
            fold='fold_1'):
-
-  config_file = os.path.join(pasta_mmdetection,MODELS_CONFIG[selected_model]['config_file'])
+  print(selected_model)
+  if selected_model != 'YOLOV8':
+    config_file = os.path.join(pasta_mmdetection,MODELS_CONFIG[selected_model]['config_file'])
+  else:
+    config_file = os.path.join(pasta_mmdetection,GERA_CFG['sabl']['config_file'])
   learning_rate = TAXA_APRENDIZAGEM[REDES.index(selected_model)]
   print("Taxa de aprendizagem = " + str(learning_rate))
   print("Limiar do classificador = " + str(LIMIAR_CLASSIFICADOR))
@@ -212,8 +219,10 @@ def setCFG(selected_model,
 
   # We can still use the pre-trained Mask RCNN model though we do not need to
   # use the mask branch
-  cfg.load_from =  MODELS_CONFIG[selected_model]['checkpoint']
-
+  if selected_model != 'YOLOV8':
+    cfg.load_from =  MODELS_CONFIG[selected_model]['checkpoint']
+  else:
+    cfg.load_from =  GERA_CFG['sabl']['checkpoint']
   # Set up working dir to save files and logs.
   cfg.work_dir = os.path.join(data_root,fold,'MModels/%s'%(selected_model))
   print('Modelos serão salvos aqui: ',cfg.work_dir)
@@ -422,7 +431,10 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=True,save_imgs
   torch.backends.cudnn.benchmark = True
   cfg.model.pretrained = None
 
-  modelx = init_detector(cfg, models_path)
+  if 'best.pt' != models_path[-7:]:
+    modelx = init_detector(cfg, models_path)
+  else:
+    modelx = 'YOLOV8'
   
   if typeN=='test':
     ann_file = cfg.data.test.ann_file
@@ -454,7 +466,13 @@ def testingModel(cfg=None,typeN='test',models_path=None,show_imgs=True,save_imgs
 
     imagex=None
     imagex=mmcv.imread(os.path.join(coco_dataset.img_prefix,dt['file_name']))
-    resultx = inference_detector(modelx, imagex)
+
+    if modelx != 'YOLOV8':
+      resultx = inference_detector(modelx, imagex)
+    else:
+      from DetectionsYOLOV8 import resultYOLO
+      resultx = resultYOLO.result(imagex,models_path)
+
     #modelx.show_result(imagex, resultx, score_thr=0.3, out_file=models_path + dt['file_name'])
 
     ann = coco_dataset.get_ann_info(i)
@@ -624,27 +642,41 @@ printToFile('ml,fold,groundtruth,predicted,TP,FP,dif,fileName','dataset/counting
 printToFile('ml,fold,mAP,mAP50,mAP75,MAE,RMSE,r,precision,recall,fscore','dataset/results.csv','w')
 
 def train_and_test(selected_model):
-  for f in np.arange(1,DOBRAS+1):
-    if(not APENAS_TESTA):
+    for f in np.arange(1,DOBRAS+1):
+      if(not APENAS_TESTA):
+        if selected_model != 'YOLOV8':
+          print('------------------------------------------------------')
+          print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+          print('------------------------------------------------------')
+          fold = 'fold_'+str(f)
+          cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
+          trainModel(cfg)
+
+        else:
+          fold = 'fold_'+str(f)
+          from SeparaDobras_YOLO import SeparaDobras
+          SeparaDobras.CriarLables(fold)
+          from TreinoYOLOV8 import TreinoYOLOV8
+          TreinoYOLOV8.Treino()
+          shutil.move('YOLOV8','dataset/'+fold)
+          shutil.rmtree('dataset/YOLO')
+      # Testando a rede treinada
       print('------------------------------------------------------')
-      print('-- TREINANDO COM A REDE ',selected_model,' NA DOBRA ',f)
+      print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
       print('------------------------------------------------------')
+
       fold = 'fold_'+str(f)
-      cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-      trainModel(cfg)
-
-    # Testando a rede treinada
-    print('------------------------------------------------------')
-    print('-- TESTANDO COM A REDE ',selected_model,' NA DOBRA ',f)
-    print('------------------------------------------------------')
-
-    fold = 'fold_'+str(f)
-    cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
-
-    pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
-    print('Usando o modelo aprendido: ',pth)
-    resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
-    printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
+      
+      if selected_model != 'YOLOV8':
+        cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
+        pth = os.path.join(cfg.data_root,(fold+'/MModels/%s/latest.pth'%(selected_model)))
+      else:
+        cfg = setCFG(selected_model=selected_model,data_root=pasta_dataset,classes=CLASSES,fold=fold)
+        data_root = 'dataset'
+        pth = os.path.join(data_root,(fold+'/YOLOV8/train/weights/best.pt'))
+      print('Usando o modelo aprendido: ',pth)
+      resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
+      printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
 
 i = 1
 for selected_model in REDES:
