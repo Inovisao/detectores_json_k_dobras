@@ -1,7 +1,11 @@
 names:
 - Peixes
-- Peixes
-nc: 2
-test: ../detectores_json_k_dobras-master/dataset/YOLO/test/images
-train: ../detectores_json_k_dobras-master/dataset/YOLO/train/images
-val: ../detectores_json_k_dobras-master/dataset/YOLO/valid/images
+nc: 1
+roboflow:
+  license: Public Domain
+  project: deteccao-de-peixes
+  version: 1
+  workspace: peixes
+test: ../dataset/YOLO/test/images
+train: ../dataset/YOLO/train/images
+val: ../dataset/YOLO/valid/images

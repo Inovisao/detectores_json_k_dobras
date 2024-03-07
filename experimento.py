@@ -20,7 +20,7 @@ TAXA_APRENDIZAGEM=5*[0.001]
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
 
-IGNORAR_ERROS=False # Desative para debugar
+IGNORAR_ERROS=True # Desative para debugar
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
@@ -89,6 +89,10 @@ from sklearn.metrics import mean_absolute_error
 import math
 import wget
 from url import url
+
+from TreinoYOLOV8 import TreinoYOLOV8
+from SeparaDobras_YOLO import CriarLabelsYOLOV8
+import gc
 
 sys.path.append('mmdetection')
 
@@ -654,11 +658,16 @@ def train_and_test(selected_model):
 
         else:
           fold = 'fold_'+str(f)
-          from SeparaDobras_YOLO import SeparaDobras
-          SeparaDobras.CriarLables(fold)
-          from TreinoYOLOV8 import TreinoYOLOV8
-          TreinoYOLOV8.Treino()
-          shutil.move('YOLOV8','dataset/'+fold)
+          
+          CriarLabelsYOLOV8(fold)
+          model = TreinoYOLOV8()
+          del model
+          gc.collect()
+
+          #shutil.move('./YOLOV8','dataset/'+ fold + '/YOLOV8')
+          if not os.path.exists("dataset/"+fold):
+            os.makedirs("dataset/"+fold)
+          os.rename("./YOLOV8", f"dataset/{fold}/YOLOV8")
           shutil.rmtree('dataset/YOLO')
       # Testando a rede treinada
       print('------------------------------------------------------')
@@ -677,6 +686,7 @@ def train_and_test(selected_model):
       print('Usando o modelo aprendido: ',pth)
       resAP50 = testingModel(cfg=cfg,models_path=pth,show_imgs=False,save_imgs=SALVAR_IMAGENS,num_model=i,fold=fold)
       printToFile(str(i)+'_'+selected_model + ','+fold+','+resAP50,'dataset/results.csv','a')
+      
 
 i = 1
 for selected_model in REDES:
