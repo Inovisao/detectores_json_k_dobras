@@ -9,6 +9,8 @@
 import json
 import os
 import shutil
+import subprocess
+
 CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
 EPOCAS=3
@@ -20,7 +22,7 @@ TAXA_APRENDIZAGEM=5*[0.001]
 APENAS_TESTA=False
 SALVAR_IMAGENS=True
 
-IGNORAR_ERROS=True # Desative para debugar
+IGNORAR_ERROS=False # Desative para debugar
 
 # COLOCA AS CATEGORIAS NA VARIAVEL CLASSE
 with open('dataset/all/train/_annotations.coco.json', 'r') as file:
@@ -658,12 +660,8 @@ def train_and_test(selected_model):
 
         else:
           fold = 'fold_'+str(f)
-          
           CriarLabelsYOLOV8(fold)
-          model = TreinoYOLOV8()
-          del model
-          gc.collect()
-
+          subprocess.run(['/home/pedroeduardo/Área de Trabalho/detectores_json_k_dobras/TreinoYOLOV8.sh'])
           #shutil.move('./YOLOV8','dataset/'+ fold + '/YOLOV8')
           if not os.path.exists("dataset/"+fold):
             os.makedirs("dataset/"+fold)
