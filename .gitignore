@@ -1,5 +1,6 @@
 .RData
 .Rhistory
 .idea
-checkpoints
-dataset
+**/checkpoints/**/**
+**/dataset/**
+**/__pycache__/

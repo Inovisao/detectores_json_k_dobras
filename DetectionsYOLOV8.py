@@ -59,6 +59,8 @@ class resultYOLO:
                 if detections.class_id[i] == j:
                     classes_usadas.append(j)
                     lista1.append([detections.xyxy[i][0],detections.xyxy[i][1],detections.xyxy[i][2],detections.xyxy[i][3],detections.confidence[i]])
+            
             lista.append(np.array(lista1,dtype='float32'))
-
+            print(lista)
+            input()
         return lista

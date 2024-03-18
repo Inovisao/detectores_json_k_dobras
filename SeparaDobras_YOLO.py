@@ -2,15 +2,20 @@ import json
 import os
 import shutil
 import yaml
-import cv2
 
 def CriarLabelsYOLOV8(fold):
 
     with open('dataset/all/train/_annotations.coco.json', 'r') as f:
         anotacaoGeral = json.load(f)
     
+    diretorio = "dataset/YOLO"
+
+    #Verifica se o diretorio existe e romove ele
+    if os.path.exists(diretorio):  
+        shutil.rmtree(diretorio)         
     classes = anotacaoGeral['categories']
     className = []
+    #Ira pegar as classes do dataset
     for i in range(len(classes)):
         className.append(classes[i]['name'])
     # Defina o caminho para o arquivo YAML que você deseja alterar
@@ -43,6 +48,7 @@ def CriarLabelsYOLOV8(fold):
 
     caminhos = (os.listdir('dataset/filesJSON'))
     foldsUsadas = []
+    #Pega o caminho do arquivo coco que esta sendo usada
     for caminho in caminhos:
         if str(caminho[0:6]) == str(fold):
             foldsUsadas.append(caminho)
@@ -52,37 +58,40 @@ def CriarLabelsYOLOV8(fold):
 
         caminho = 'dataset/filesJSON/'+Caminho
         # Lendo o arquivo JSON
-        print(caminho)
         with open(caminho, 'r') as f:
             anotacaoDobras = json.load(f)
         # Exibindo os dados lidos
         NameFile = []
         imageID = []
         anotacao = {}
+        idAnotcao = {}
+        #Salva a lista de id das imagens
         for i in range(len(anotacaoDobras['annotations'])):
             imageID.append(anotacaoDobras['annotations'][i]['image_id'])
 
+        #Faz a lista sem repetir os IDs
         imageID = (list(set(imageID)))
 
+        #Cria um dicionario Com ID das imagens
         for i in imageID:
             anotacao[i] = []
-
+            idAnotcao[i] = [] 
+        #Ira pegar as anotações es classes de cada imagens e salvar em seus dicionarios
         for id in imageID:
             for i in range(len(anotacaoDobras['annotations'])):
                 if anotacaoDobras['annotations'][i]['image_id'] == id:
                     anotacao[id].append(anotacaoDobras['annotations'][i]['bbox'])
-
+                    idAnotcao[id].append(anotacaoDobras['annotations'][i]['category_id']-1)
+        #Salva o nome de cada imagem
         for i in imageID:
             for j in range(len(anotacaoDobras['images'])):
                 if (anotacaoDobras['images'][j]['id']) == i:
                     NameFile.append(anotacaoDobras['images'][j]['file_name'])
         
         slectImage = 0
-        
+        #Converte as anotações para o formato da YOLOV8
         for id in imageID:
             linhas = []
-            nome = 'dataset/all/train/'+str(NameFile[slectImage][0:-4]+'.jpg')
-            frame = cv2.imread(nome)
             for i in range (len(anotacao[id])):
                 x1 = int(anotacao[id][i][0])
                 y1 = int(anotacao[id][i][1])
@@ -95,8 +104,8 @@ def CriarLabelsYOLOV8(fold):
 
                 width = abs(anotacao[id][i][2])
                 height = abs(anotacao[id][i][3])
-                
-                linhas.append(str(str(0)+' '+str(x_center/640)+' '+str(y_center/640)+' '+str(width/640)+' '+str(height/640)+"\n"))
+                linhas.append(str(idAnotcao[id][i])+' '+str(x_center/640)+' '+str(y_center/640)+' '+str(width/640)+' '+str(height/640)+"\n")
+
             image = 'dataset/all/train/'+NameFile[slectImage]
             arq = NameFile[slectImage][0:-4]+'.txt'
             with open(arq, 'w') as arquivo:

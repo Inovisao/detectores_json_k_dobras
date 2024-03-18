@@ -19,7 +19,7 @@ LIMIAR_IOU=0.5
 # Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
 TAXA_APRENDIZAGEM=5*[0.001]
 
-APENAS_TESTA=False
+APENAS_TESTA=True
 SALVAR_IMAGENS=True
 
 IGNORAR_ERROS=False # Desative para debugar
@@ -92,7 +92,6 @@ import math
 import wget
 from url import url
 
-from TreinoYOLOV8 import TreinoYOLOV8
 from SeparaDobras_YOLO import CriarLabelsYOLOV8
 import gc
 
@@ -119,6 +118,7 @@ plt.rcParams["axes.grid"] = False
 from models_dict import models_dict
 
 MODELS_CONFIG = {
+  #'detr': models_dict['detr']['detr_r50_8x2_150e_coco']
   #'sabl': models_dict["sabl"]["sabl_retinanet_r50_fpn_1x_coco"],
   'YOLOV8' : None
 }
@@ -660,11 +660,13 @@ def train_and_test(selected_model):
 
         else:
           fold = 'fold_'+str(f)
-          CriarLabelsYOLOV8(fold)
-          subprocess.run(['/home/pedroeduardo/Área de Trabalho/detectores_json_k_dobras/TreinoYOLOV8.sh'])
-          #shutil.move('./YOLOV8','dataset/'+ fold + '/YOLOV8')
+          CriarLabelsYOLOV8(fold) # Cria as Lables para o Treino da YOLO
+          arquivo = str(os.getcwd()+'/TreinoYOLOV8.sh')
+          subprocess.run([arquivo]) # Roda o bash para treino
           if not os.path.exists("dataset/"+fold):
             os.makedirs("dataset/"+fold)
+          if os.path.exists(f"dataset/{fold}/YOLOV8"):  
+            shutil.rmtree(f"dataset/{fold}/YOLOV8") 
           os.rename("./YOLOV8", f"dataset/{fold}/YOLOV8")
           shutil.rmtree('dataset/YOLO')
       # Testando a rede treinada
