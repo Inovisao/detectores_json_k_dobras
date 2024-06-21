@@ -20,13 +20,14 @@ anotacoes = COCO(args.annotations)
 # Mantem apenas a categoria zero, trocanco o nome para o passado como parâmetro
 categorias = anotacoes.dataset['categories']
 categorias[0]['name'] = args.classe
+categorias[0]['id'] = 1
 
 # Remove as outras categorias
 categorias = categorias[0:1]
 
 # Troca a categoria para 0 em todas as anotações
 for anotacao in anotacoes.dataset['annotations']:
-    anotacao['category_id'] = 0
+    anotacao['category_id'] = 1
 
 def save_coco(file, info, licenses, images, annotations, categories):
     with open(file, 'wt', encoding='UTF-8') as coco:
