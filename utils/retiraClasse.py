@@ -17,18 +17,16 @@ args = parser.parse_args()
 
 anotacoes = COCO(args.annotations)
 
-categorias_ID = anotacoes.getCatIds()
-categorias = anotacoes.loadCats(categorias_ID)
+# Mantem apenas a categoria zero, trocanco o nome para o passado como parâmetro
+categorias = anotacoes.dataset['categories']
+categorias[0]['name'] = args.classe
 
-print('Categorias: ',categorias)
+# Remove as outras categorias
+categorias = categorias[0:1]
 
-# Cria um dicionário para mapear os IDs das categorias para o novo nome
-mapa_nomes = {categoria['id']: args.classe for categoria in categorias}
-
-# Altera os nomes das categorias
-for img_id in anotacoes.imgs:
-   for anotacao in anotacoes.imgToAnns[img_id]:
-      anotacao['category_id'] = mapa_nomes[anotacao['category_id']]
+# Troca a categoria para 0 em todas as anotações
+for anotacao in anotacoes.dataset['annotations']:
+    anotacao['category_id'] = 0
 
 def save_coco(file, info, licenses, images, annotations, categories):
     with open(file, 'wt', encoding='UTF-8') as coco:
