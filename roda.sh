@@ -4,3 +4,6 @@ python experimento.py
 # Roda o programa na linguagem R que gera os gráficos
 # e estatísticas
 Rscript graficos.R
+
+
+# comentário
