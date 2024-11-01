@@ -6,6 +6,13 @@
 # automaticamente usando o nome do arquivo para a variável
 # CLASSES (ver abaixo comando sed)
 
+# Avisa que vai apagar os datasets e pergunta se quer mesmo continuar
+echo 'Vai apagar os datasets. Deseja continuar? (s/n)'
+read resposta
+if [ $resposta != 's' ]; then
+    exit
+fi
+
 rm -rf resultados
 mkdir -p resultados
 cd utils
