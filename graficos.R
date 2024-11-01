@@ -217,6 +217,10 @@ for (net in nets) {
   print(substr(net,3,100))
   print(maiores[maiores$ml == net, ]$fileName)
   pastaDaRede <- paste("./dataset/prediction_",substr(net,3,100),"/",sep="")
+  # Testa se existe pastaDaRede e se não existe sai do laço
+   if (!file.exists(pastaDaRede)) {
+      next
+   }
   novaPasta <- paste("./dataset/prediction_",substr(net,3,100),"/maiores/",sep="")
   dir.create(novaPasta, showWarnings = TRUE)
   file.copy(paste(pastaDaRede,maiores[maiores$ml == net, ]$fileName,sep=""),novaPasta,overwrite = TRUE)
@@ -227,6 +231,10 @@ for (net in nets) {
   print(substr(net,3,100))
   print(menores[menores$ml == net, ]$fileName)
   pastaDaRede <- paste("./dataset/prediction_",substr(net,3,100),"/",sep="")
+  # Testa se existe pastaDaRede e se não existe sai do laço
+   if (!file.exists(pastaDaRede)) {
+      next
+   }
   novaPasta <- paste("./dataset/prediction_",substr(net,3,100),"/menores/",sep="")
   dir.create(novaPasta, showWarnings = TRUE)
   file.copy(paste(pastaDaRede,menores[menores$ml == net, ]$fileName,sep=""),novaPasta,overwrite = TRUE)
