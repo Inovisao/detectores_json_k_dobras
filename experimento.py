@@ -14,14 +14,13 @@ import argparse
 # Argumentos
 # Testa se passou argumentos -e para epoca, -lc para limiar de classificador, -li para limiar de IOU e lr para taxa de aprendizado
 parser = argparse.ArgumentParser(description='Treinamento de redes')
-parser.add_argument('-e', '--epocas', type=int, help='Número de épocas', default=7)
 parser.add_argument('-lc', '--limiar_classificador', type=float, help='Limiar do classificador', default=0.5)
 parser.add_argument('-li', '--limiar_iou', type=float, help='Limiar de IOU', default=0.5)
 parser.add_argument('-lr', '--learning_rate', type=float, help='Taxa de aprendizado', default=0.001)
 
 CLASSES=('*',)
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
-EPOCAS=parser.parse_args().epocas
+EPOCAS=7
 LIMIAR_CLASSIFICADOR=parser.parse_args().limiar_classificador 
 LIMIAR_IOU=parser.parse_args().limiar_iou
 # Taxa de Aprendizado para cada Rede, seguindo a sequencia que aparece no MODELS_CONFIG
