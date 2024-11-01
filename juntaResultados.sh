@@ -48,6 +48,9 @@ mv allCounting.csv ./dataset/counting.csv
 rm -rf dataset/fold_*
 rm -rf dataset/prediction*
 
+find resultados -name all | xargs rm -rf
+find resultados -name filesJSON | xargs rm -rf 
+
 Rscript graficos.R
 
 
