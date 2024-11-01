@@ -14,6 +14,7 @@ for lr in ${lrS[@]}; do
         for li in ${liS[@]}; do
             echo 'Rodando para lr=' $lr ' lc=' $lc ' li=' $li
             python experimento.py -lr=$lr -lc=$lc -li=$li
+            Rscript graficos.R
             mkdir -p resultados/lr$lr-lc$lc-li$li
             cp -R dataset ./resultados/lr$lr-lc$lc-li$li
             cp nohup.out ./resultados/lr$lr-lc$lc-li$li/
