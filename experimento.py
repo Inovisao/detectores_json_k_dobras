@@ -18,7 +18,7 @@ parser.add_argument('-lc', '--limiar_classificador', type=float, help='Limiar do
 parser.add_argument('-li', '--limiar_iou', type=float, help='Limiar de IOU', default=0.5)
 parser.add_argument('-lr', '--learning_rate', type=float, help='Taxa de aprendizado', default=0.001)
 
-CLASSES=('*',)
+CLASSES=()
 DOBRAS=0 # Não precisa mais mexer, vai calcular automaticamente.
 EPOCAS=7
 LIMIAR_CLASSIFICADOR=parser.parse_args().limiar_classificador 
