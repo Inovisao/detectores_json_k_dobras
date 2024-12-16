@@ -1,3 +1,7 @@
+# Testa se a GPU está ok usando uma chamada para o sistema operacional e rodando no nvidia-smi
+import os
+os.system('nvidia-smi')
+
 # Testa pytorch
 import torch
 
