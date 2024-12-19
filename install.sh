@@ -3,8 +3,8 @@
 
 
 # SUGESTÃO 1: 
-# Testada em 17/05/2023 por Hemerson Pistori (pistori@ucdb.br)
-# Ubuntu 22.04 GPU: GTX 1070 CUDA 12.0 Driver: Nvidia 525.105.17
+# Testada em 19/12/2024 por Hemerson Pistori (pistori@ucdb.br)
+# Ubuntu 22.04 GPU: RTX A4000  NVIDIA-SMI 535.183.01   CUDA Version: 12.2  
 # -----------------------------------------------------------------------------------------------
 conda create --name detectores python=3.8 -y
 conda activate detectores
@@ -12,8 +12,9 @@ conda install -y pytorch==1.12.1 torchvision==0.13.1 cudatoolkit=11.6 -c pytorch
 python -c 'import torch;print(torch.__version__);print(torch.version.cuda)'
 pip install --no-input dicttoxml albumentations terminaltables imagecorruptions funcy scikit-learn pycocotools wget
 pip install --no-input -U openmim
-mim install mmengine
+mim install "mmengine==0.8.4"
 mim install "mmcv==1.3.17"
+mim install "mmcv-full==1.7.1"
 mim install "mmdet==2.28.2"
 pip install yapf==0.40.1
 
